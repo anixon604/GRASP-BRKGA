@@ -16,47 +16,8 @@ MAXHOURS = 9
 MAXCONSEC = 3
 MAXPRESENCE = 14
 
-
-# CONSTRAINTS
-"""
-	// the number of provided nurses is greater or equal to the demand
-	forall(h in H)
-		sum(n in N) works[n][h] >= demand[h]; 
-
-
-	// Each nurse should work at least minHours hours.
-	forall(n in N)
-		sum (h in H) works[n][h] >= minHours*used[n];
-
-	// Each nurse should work at most maxHours hours.
-	forall(n in N)
-		sum (h in H) works[n][h] <= maxHours*used[n];
-
-	// Each nurse should work at most maxConsec consecutive hours.
-	forall(n in N)
-		forall(i in 1..(hours-maxConsec))
-			sum(j in i..(i+maxConsec)) works[n][j] <= maxConsec*used[n];
-
-	// No nurse can stay at the hospital for more than max Presence 
-	// hours (e.g. if maxP resence is 7, it is OK that a nurse works 
-	// at 2am and also at 8am, but it not possible that he/she works 
-	// at 2am and also at 9am).
-	forall(n in N)
-		forall (h in H: h <= hours-maxPresence)
-			worksBefore[n][h] + worksAfter[n][h+maxPresence] <= 1;
-
-	forall(n in N)
-		forall (h in H: h <= hours-1){
-			worksAfter[n][h] >= worksAfter[n][h+1]; // legal: 11111110, illegal: 11111010
-			worksBefore[n][h] <= worksBefore[n][h+1]; // legal: 00011111, illegal: 00111110
-			rests[n][h] + rests[n][h+1] <= 1;
-			// legal: 00010100, illegal: 00110010
-		}
-
-	forall(n in N)
-		forall (h in H)
-			rests[n][h] == (1-works[n][h]) - (1-worksAfter[n][h]) - (1-worksBefore[n][h]); 
-"""
+data = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
+        'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
 # UTILITY FUNCTIONS
@@ -64,7 +25,56 @@ def generate_candidate_list():
     """ Generates permutations for candiate list
         input: number of nurses
         returns: initial candidate list """
-    
+# Filter candidate list with constraints and feasibility
+    # a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
+
+
+def checkschedule(schedule):
+    """ Checks a shedule against constraints
+        input: a schedule as boolean list
+        returns: boolean value whether schedule conforms to constraint or not
+
+        Constraint Description:
+        a) the number of provided nurses is greater or equal to the demand
+
+        b) Each nurse should work at least minHours hours.
+        c) Each nurse should work at most maxHours hours.
+        d) No nurse can stay at the hospital for more than maxPresence hours
+        e) No nurse can rest for more than 1 consecutive hour
+        f) Each nurse should work at most maxConsec hours
+    """
+    test = 0
+    sumhours = sum(schedule)
+    if sumhours < data['minHours'] and sumhours != 0:     #Constraint minH
+        test = 1
+    if sumhours > data['maxHours']:                       #Constraint maxH
+        test = 1
+    if sumhours != 0:                                     #Constraints rests and maxPresence
+        i = 0
+        while schedule[i] == 0:
+            i = i+1
+        imin = i
+        i = len(schedule)-1
+        while schedule[i] == 0:
+            i = i - 1
+        imax = i
+        for i in range(imin, imax):
+            if schedule[i] == 0 and schedule[i+1] == 0:             #Constraints rests
+                test = 1
+        if imax-imin+1 > data['maxPresence']:                       #Constraints maxPresence
+            test = 1
+
+        compteur = 0
+        for i in range(imin, imax+1):                     #Constraints maxConsec
+            if schedule[i] == 1:
+                compteur += 1
+            else:
+                if compteur > data['maxConsec']:
+                    test = 1
+                compteur = 0
+        if compteur > data['maxConsec']:
+            test = 1
+    return test != True # invert the return value
 
 
 def grasp_procedure(f_x, g_x, maxitr):
