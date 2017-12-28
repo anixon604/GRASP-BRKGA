@@ -6,6 +6,23 @@ import math
 import sys
 import random
 
+# Global Params for Defining the Problem
+NURSES = 20
+HOURS = 24
+DEMAND_PER_HOUR = [2, 2, 1, 1, 1, 2, 2, 3, 4, 6, 6, 7, 5, 8, 8, 7, 6,
+                   6, 4, 3, 4, 3, 3, 3]
+MINHOURS = 5
+MAXHOURS = 9
+MAXCONSEC = 3
+MAXPRESENCE = 14
+
+# UTILITY FUNCTIONS
+def generate_candidate_list():
+    """ Generates permutations for candiate list
+        input: number of nurses
+        returns: initial candidate list """
+    
+
 
 def grasp_procedure(f_x, g_x, maxitr):
     """ Procedure function
