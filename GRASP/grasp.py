@@ -51,11 +51,26 @@ def construct_grasp(g_x, alpha):
         params:
             gx - scoring function
             alpha - greediness
-        returns: a valid solution (not necessarily optimal)"""
+        returns: a valid solution (not necessarily optimal)
+        
+        Notes: 
+            Building a solution consists of adding nurses in sequence 1..NURSES
+            - calculate the score of nurse(i,j) j E all feasible schedules for nurse i.
+            - create RCL of n highest scores
+            - Select j from RCL for nurse i using relative probability based on scores
+            - Update the solution
+            - subtrack j values from DEMAND_PER_HOUR
+            - repeat, if (i > NURSES) OR (|DEMAND_PER_HOUR| == 0) then break
+
+            SCORING:
+                - BEFORE scoring discard all possible schedules that don't satisfy constraints
+                g_x = 
+                sum([DEMAND_PER_HOUR_k - j_k]^2)/HOURS
+                    How CLOSELY the nurse's schedule j satisfies the remaining demand
+
+        """
     possible_solution_x = []
     
-    # !!! init this to a matix/set of all possible schedules for
-    # all possible nurses
     candidate_set = []
     
     while candidate_set != []:
