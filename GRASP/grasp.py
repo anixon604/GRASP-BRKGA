@@ -16,6 +16,49 @@ MAXHOURS = 9
 MAXCONSEC = 3
 MAXPRESENCE = 14
 
+
+# CONSTRAINTS
+"""
+	// the number of provided nurses is greater or equal to the demand
+	forall(h in H)
+		sum(n in N) works[n][h] >= demand[h]; 
+
+
+	// Each nurse should work at least minHours hours.
+	forall(n in N)
+		sum (h in H) works[n][h] >= minHours*used[n];
+
+	// Each nurse should work at most maxHours hours.
+	forall(n in N)
+		sum (h in H) works[n][h] <= maxHours*used[n];
+
+	// Each nurse should work at most maxConsec consecutive hours.
+	forall(n in N)
+		forall(i in 1..(hours-maxConsec))
+			sum(j in i..(i+maxConsec)) works[n][j] <= maxConsec*used[n];
+
+	// No nurse can stay at the hospital for more than max Presence 
+	// hours (e.g. if maxP resence is 7, it is OK that a nurse works 
+	// at 2am and also at 8am, but it not possible that he/she works 
+	// at 2am and also at 9am).
+	forall(n in N)
+		forall (h in H: h <= hours-maxPresence)
+			worksBefore[n][h] + worksAfter[n][h+maxPresence] <= 1;
+
+	forall(n in N)
+		forall (h in H: h <= hours-1){
+			worksAfter[n][h] >= worksAfter[n][h+1]; // legal: 11111110, illegal: 11111010
+			worksBefore[n][h] <= worksBefore[n][h+1]; // legal: 00011111, illegal: 00111110
+			rests[n][h] + rests[n][h+1] <= 1;
+			// legal: 00010100, illegal: 00110010
+		}
+
+	forall(n in N)
+		forall (h in H)
+			rests[n][h] == (1-works[n][h]) - (1-worksAfter[n][h]) - (1-worksBefore[n][h]); 
+"""
+
+
 # UTILITY FUNCTIONS
 def generate_candidate_list():
     """ Generates permutations for candiate list
