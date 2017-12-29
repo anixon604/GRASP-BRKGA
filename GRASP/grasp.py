@@ -25,6 +25,40 @@ DATA = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MA
         'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
+# TEST SETS
+DATA_SMALL = {
+	   "nNurses": 12,
+	   "nHours":9,
+	   "minHours": 3,
+	   "maxHours": 6,
+	   "maxConsec": 7,
+	   "maxPresence": 8,
+	   "demand": [5, 3, 8, 5, 1, 7, 5, 6, 2]
+}
+
+DATA_MID = {
+	   "nNurses": 200,
+	   "nHours":24,
+	   "minHours": 6,
+	   "maxHours": 12,
+	   "maxConsec": 6,
+	   "maxPresence": 18,
+	   "demand": [53, 24, 33, 40, 70, 12, 33, 55, 66, 12, 30, 22, 55,
+               77, 88, 22, 34, 55, 22, 55, 23, 22, 11, 12]
+}
+
+DATA_LARGE = {
+	   "nNurses": 1800,
+	   "nHours":24,
+	   "minHours": 6,
+	   "maxHours": 18,
+	   "maxConsec": 7,
+	   "maxPresence": 24,
+	   "demand": [964, 650, 966, 1021, 824, 387, 828, 952, 611, 468, 403, 561, 862,
+               597, 1098, 855, 918, 1016, 897, 356, 615, 670, 826, 349]
+}
+
+
 # PROGRAM ENTRY WILL GO HERE -----------------------
 # check a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
 
@@ -139,7 +173,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     return xprime
 
 # Constructor function - gene
-def construct_grasp(g_x, alpha):
+def construct_grasp(g_xp, alpha):
     """ Constructor function for GRASP
         params:
             gx - scoring function
@@ -162,12 +196,12 @@ def construct_grasp(g_x, alpha):
                     How CLOSELY the nurse's schedule j satisfies the remaining demand
 
         """
-    possible_solution_x = []
-    candidate_set = []
+    possible_solution_x = [] # init empty solution
+    candidate_set = get_candidate_list
 
     while candidate_set != []:
         # score all elements in the candidate set
-        scored_c_set = [g_x(elem) for elem in candidate_set]
+        scored_c_set = [g_xp(elem) for elem in candidate_set]
         smin = min(scored_c_set)
         smax = max(scored_c_set)
 
