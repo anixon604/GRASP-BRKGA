@@ -8,7 +8,7 @@ import sys
 import random
 
 # Global Params for Defining the Problem
-# Constants used for clarity, actual program will use data structure below
+# Constants used for clarity, actual program will use DATA structure below
 NURSES = 20
 HOURS = 3
 DEMAND_PER_HOUR = [2, 2, 1, 1, 1, 2, 2, 3, 4, 6, 6, 7, 5, 8, 8, 7, 6,
@@ -17,8 +17,11 @@ MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
 MAXPRESENCE = 14
+# Run Params
+MAXITR = 10 # iterations of grasp
+ALPHA = 0.5 # greediness of construction, range [0,1]
 
-data = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
+DATA = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
         'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
@@ -41,7 +44,7 @@ def get_candidate_list():
     # The candidate_set is a matrix i,j where i is a feasible schedule and j is a given hour
     # position (0 = not work, 1 = work)
     candidate_set = []
-    for i in range(2**data['nHours']):
+    for i in range(2**DATA['nHours']):
         a_schedule = get_bin(i)
         if checkschedule(a_schedule):
             candidate_set.append(a_schedule)
@@ -75,7 +78,7 @@ def checkschedule(schedule): # tested working
     if sumhours == 0:
         test = 1 # automatic pass
     #Constraint minH and Constraint maxH
-    elif sumhours >= data['minHours'] and sumhours <= data['maxHours']:
+    elif sumhours >= DATA['minHours'] and sumhours <= DATA['maxHours']:
         i = 0
         while schedule[i] == 0:
             i = i+1
@@ -84,15 +87,15 @@ def checkschedule(schedule): # tested working
         while schedule[i] == 0:
             i = i - 1
         imax = i
-        if imax-imin+1 <= data['maxPresence']:    #Constraints maxPresence
+        if imax-imin+1 <= DATA['maxPresence']:    #Constraints maxPresence
             compteur = 0
             for i in range(imin, imax+1):
                 if schedule[i] == 0:              #Constraints rests and maxConsec
-                    if compteur > data['maxConsec'] or (i < imax and schedule[i+1] == 0):
+                    if compteur > DATA['maxConsec'] or (i < imax and schedule[i+1] == 0):
                         return 0 # automatic fail
                     compteur = 0 # reset count
                 compteur += 1
-            if compteur <= data['maxConsec']:
+            if compteur <= DATA['maxConsec']:
                 test = 1 # final test passed
     return test
 
@@ -105,12 +108,11 @@ def grasp_procedure(f_x, g_x, maxitr):
             maxitr - number of iterations to run construct/local cycle
         returns: best solution after maxitr cycles"""
     xprime = sys.maxint # best solution
-    alpha = 0.5 # greediness (0 - 1)
 
     # iterate through multistart construct and local search cycles
     # through each cycle, replace best solution if better found
     for i in range(maxitr):
-        temporary_solutionx = construct_grasp(g_x, alpha)
+        temporary_solutionx = construct_grasp(g_x, ALPHA) # alpha is greediness defined as initial param
         temporary_solutionx = localSearch(f_x, temporary_solutionx) # see if var name ok
         if f_x(temporary_solutionx) < f_x(xprime):
             xprime = temporary_solutionx
