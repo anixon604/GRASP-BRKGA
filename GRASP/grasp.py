@@ -1,6 +1,7 @@
-# AMMM MIRI Project
-# Semester 1: 2017
-# Author: Anthony Nixon, Mathieu Chiavassa
+"""
+AMMM MIRI Project
+Semester 1: 2017
+Author: Anthony Nixon, Mathieu Chiavassa"""
 
 import math
 import sys
@@ -8,10 +9,10 @@ import random
 
 # Global Params for Defining the Problem
 NURSES = 20
-HOURS = 24
+HOURS = 3
 DEMAND_PER_HOUR = [2, 2, 1, 1, 1, 2, 2, 3, 4, 6, 6, 7, 5, 8, 8, 7, 6,
                    6, 4, 3, 4, 3, 3, 3]
-MINHOURS = 5
+MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
 MAXPRESENCE = 14
@@ -20,26 +21,30 @@ data = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MA
         'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
+# PROGRAM ENTRY WILL GO HERE -----------------------
+# check a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
+
 # UTILITY FUNCTIONS
 def get_candidate_list():
     """ Loads valid candidate schedule from file IF EXISTS
         OR Generates permutations for candiate list
         input: number of HOURS
-        returns: initial candidate list of feasible work schedules 
-        
+        returns: initial candidate list of feasible work schedules
+
         NOTE: candidate list should be saved to JSON after generation
         """
-
     # Generate permutations of schedules from 0...2^(HOURS)-1
-    # Candidates are generated from integers and traslated to bit-permutation/boolean representation of a possible schedule
+    # Candidates are generated from integers and traslated to bit-permutation/boolean
+    # representation of a possible schedule
     # Each possible schedule is check for feasibility against the constraints using checkschedule()
-    # The candidate_set is a matrix i,j where i is a feasible schedule and j is a given hour position (0 = not work, 1 = work)
+    # The candidate_set is a matrix i,j where i is a feasible schedule and j is a given hour
+    # position (0 = not work, 1 = work)
     candidate_set = []
     for i in range(2**HOURS):
-        print(i)
-
-    # Filter candidate list with constraints and feasibility
-    # a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
+        a_schedule = get_bin(i)
+        if checkschedule(a_schedule):
+            candidate_set.append(a_schedule)
+    return candidate_set
 
 def get_bin(x_in, n_len=HOURS):
     """ Get the binary list representation of x.
@@ -63,14 +68,15 @@ def checkschedule(schedule): # tested working
         d) No nurse can stay at the hospital for more than maxPresence hours
         e) No nurse can rest for more than 1 consecutive hour
         f) Each nurse should work at most maxConsec hours
+
+        NOTE: the way this function is written 0 = PASS, 1 = FAIL
     """
-    test = 0
+    test = 1 # default to fail (due to inverse at return)
     sumhours = sum(schedule)
-    if sumhours < data['minHours'] and sumhours != 0:     #Constraint minH
-        test = 1
-    if sumhours > data['maxHours']:                       #Constraint maxH
-        test = 1
-    if sumhours != 0:                                     #Constraints rests and maxPresence
+    if sumhours == 0:
+        test = 0 # pass
+    #Constraint minH and Constraint maxH
+    elif sumhours >= data['minHours'] and sumhours <= data['maxHours']:
         i = 0
         while schedule[i] == 0:
             i = i+1
@@ -79,22 +85,16 @@ def checkschedule(schedule): # tested working
         while schedule[i] == 0:
             i = i - 1
         imax = i
-        for i in range(imin, imax):
-            if schedule[i] == 0 and schedule[i+1] == 0:             #Constraints rests
-                test = 1
-        if imax-imin+1 > data['maxPresence']:                       #Constraints maxPresence
-            test = 1
-
-        compteur = 0
-        for i in range(imin, imax+1):                     #Constraints maxConsec
-            if schedule[i] == 1:
+        if imax-imin+1 <= data['maxPresence']:    #Constraints maxPresence
+            compteur = 0
+            for i in range(imin, imax+1):
+                if schedule[i] == 0:              #Constraints rests and maxConsec
+                    if compteur > data['maxConsec'] or (i < imax and schedule[i+1] == 0):
+                        return 0 # automatic fail
+                    compteur = 0 # reset count
                 compteur += 1
-            else:
-                if compteur > data['maxConsec']:
-                    test = 1
-                compteur = 0
-        if compteur > data['maxConsec']:
-            test = 1
+            if compteur <= data['maxConsec']:
+                test = 0 # final test passed
     return test != True # invert the return value
 
 
@@ -126,8 +126,8 @@ def construct_grasp(g_x, alpha):
             gx - scoring function
             alpha - greediness
         returns: a valid solution (not necessarily optimal)
-        
-        Notes: 
+
+        Notes:
             Building a solution consists of adding nurses in sequence 1..NURSES
             - calculate the score of nurse(i,j) j E all feasible schedules for nurse i.
             - create RCL of n highest scores
@@ -138,15 +138,14 @@ def construct_grasp(g_x, alpha):
 
             SCORING:
                 - BEFORE scoring discard all possible schedules that don't satisfy constraints
-                g_x = 
+                g_x =
                 sum([DEMAND_PER_HOUR_k - j_k]^2)/HOURS
                     How CLOSELY the nurse's schedule j satisfies the remaining demand
 
         """
     possible_solution_x = []
-    
     candidate_set = []
-    
+
     while candidate_set != []:
         # score all elements in the candidate set
         scored_c_set = [g_x(elem) for elem in candidate_set]
