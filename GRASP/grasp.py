@@ -139,13 +139,13 @@ def f_x(solution):
         returns: the sum of i nurses"""
     return len(solution)
 
-def g_x(schedule):
+def g_x(schedule, demand):
     """ Scoring Function for ranking feasible nurse schedules
-        params: a schedule vector of elements 0 or 1 for h hours
+        params: schedule - a schedule vector of elements 0 or 1 for h hours
+                demand - a demand vector to score against
         returns: sum of square differences between demand vector and schedule vector
                 a lower score means (BETTER) greater satisfaction.
                 sum([demand_i - schedule_i]^2) for all i in HOURS """
-    demand = DATA['demand']
     score = sys.maxint # score init to inf
     for i in range(DATA['nHours']):
         score += (demand[i]-schedule[i])**2
@@ -198,6 +198,22 @@ def construct_grasp(g_xp, alpha):
         """
     possible_solution_x = [] # init empty solution
     candidate_set = get_candidate_list
+
+    for _ in range(DATA['nNurses']):
+        # score all elements in the candidate set
+        scored_c_set = [g_xp(elem) for elem in candidate_set]
+        smin = min(scored_c_set)
+        smax = max(scored_c_set)
+
+        # create RCL based on top scorers
+        restricted_c_list = [s for s in scored_c_set if s <= smin+alpha*(smax-smin)]
+        # choose random element from RCL to add to solution
+        solution_element = random.choice(restricted_c_list)
+        possible_solution_x.append(solution_element)
+
+        # remove element work hours from demand
+
+
 
     while candidate_set != []:
         # score all elements in the candidate set
