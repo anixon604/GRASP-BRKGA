@@ -21,17 +21,38 @@ data = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MA
 
 
 # UTILITY FUNCTIONS
-def generate_candidate_list():
-    """ Generates permutations for candiate list
-        input: number of nurses
-        returns: initial candidate list """
-# Filter candidate list with constraints and feasibility
+def get_candidate_list():
+    """ Loads valid candidate schedule from file IF EXISTS
+        OR Generates permutations for candiate list
+        input: number of HOURS
+        returns: initial candidate list of feasible work schedules 
+        
+        NOTE: candidate list should be saved to JSON after generation
+        """
+
+    # Generate permutations of schedules from 0...2^(HOURS)-1
+    # Candidates are generated from integers and traslated to bit-permutation/boolean representation of a possible schedule
+    # Each possible schedule is check for feasibility against the constraints using checkschedule()
+    # The candidate_set is a matrix i,j where i is a feasible schedule and j is a given hour position (0 = not work, 1 = work)
+    candidate_set = []
+    for i in range(2**HOURS):
+        print(i)
+
+    # Filter candidate list with constraints and feasibility
     # a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
 
+def get_bin(x_in, n_len=HOURS):
+    """ Get the binary list representation of x.
+    params: x - number to convert, n - number of digits
+    returns: boolean list
+    """
+    x_str = format(x_in, 'b').zfill(n_len)
+    return [int(i) for i in x_str]
 
-def checkschedule(schedule):
+
+def checkschedule(schedule): # tested working
     """ Checks a shedule against constraints
-        input: a schedule as boolean list
+        params: a schedule as boolean list
         returns: boolean value whether schedule conforms to constraint or not
 
         Constraint Description:
@@ -83,7 +104,7 @@ def grasp_procedure(f_x, g_x, maxitr):
             fx - optimization function
             gx - scoring function
             maxitr - number of iterations to run construct/local cycle
-            returns: best solution after maxitr cycles"""
+        returns: best solution after maxitr cycles"""
     xprime = sys.maxint # best solution
     alpha = 0.5 # greediness (0 - 1)
 
