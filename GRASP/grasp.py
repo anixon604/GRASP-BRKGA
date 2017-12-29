@@ -100,11 +100,22 @@ def checkschedule(schedule): # tested working
     return test
 
 def f_x(solution):
-    """ Objective Function for minimization
-        Number of nurses scheduled
+    """ Objective Function for minimization of number of nurses scheduled
         params: a solution matrix of schedules for i nurses, j hours not-worked/worked
         returns: the sum of i nurses"""
     return len(solution)
+
+def g_x(schedule):
+    """ Scoring Function for ranking feasible nurse schedules
+        params: a schedule vector of elements 0 or 1 for h hours
+        returns: sum of square differences between demand vector and schedule vector
+                a lower score means (BETTER) greater satisfaction.
+                sum([demand_i - schedule_i]^2) for all i in HOURS """
+    demand = DATA['demand']
+    score = sys.maxint # score init to inf
+    for i in range(DATA['nHours']):
+        score += (demand[i]-schedule[i])**2
+    return score
 
 def grasp_procedure(f_xp, g_xp, maxitr):
     """ Procedure function
