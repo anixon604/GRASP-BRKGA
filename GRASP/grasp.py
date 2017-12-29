@@ -8,6 +8,7 @@ import sys
 import random
 
 # Global Params for Defining the Problem
+# Constants used for clarity, actual program will use data structure below
 NURSES = 20
 HOURS = 3
 DEMAND_PER_HOUR = [2, 2, 1, 1, 1, 2, 2, 3, 4, 6, 6, 7, 5, 8, 8, 7, 6,
@@ -40,7 +41,7 @@ def get_candidate_list():
     # The candidate_set is a matrix i,j where i is a feasible schedule and j is a given hour
     # position (0 = not work, 1 = work)
     candidate_set = []
-    for i in range(2**HOURS):
+    for i in range(2**data['nHours']):
         a_schedule = get_bin(i)
         if checkschedule(a_schedule):
             candidate_set.append(a_schedule)
@@ -68,13 +69,11 @@ def checkschedule(schedule): # tested working
         d) No nurse can stay at the hospital for more than maxPresence hours
         e) No nurse can rest for more than 1 consecutive hour
         f) Each nurse should work at most maxConsec hours
-
-        NOTE: the way this function is written 0 = PASS, 1 = FAIL
     """
-    test = 1 # default to fail (due to inverse at return)
+    test = 0 # default to fail (due to inverse at return)
     sumhours = sum(schedule)
     if sumhours == 0:
-        test = 0 # pass
+        test = 1 # automatic pass
     #Constraint minH and Constraint maxH
     elif sumhours >= data['minHours'] and sumhours <= data['maxHours']:
         i = 0
@@ -94,8 +93,8 @@ def checkschedule(schedule): # tested working
                     compteur = 0 # reset count
                 compteur += 1
             if compteur <= data['maxConsec']:
-                test = 0 # final test passed
-    return test != True # invert the return value
+                test = 1 # final test passed
+    return test
 
 
 def grasp_procedure(f_x, g_x, maxitr):
