@@ -99,25 +99,32 @@ def checkschedule(schedule): # tested working
                 test = 1 # final test passed
     return test
 
+def f_x(solution):
+    """ Objective Function for minimization
+        Number of nurses scheduled
+        params: a solution matrix of schedules for i nurses, j hours not-worked/worked
+        returns: the sum of i nurses"""
+    return len(solution)
 
-def grasp_procedure(f_x, g_x, maxitr):
+def grasp_procedure(f_xp, g_xp, maxitr):
     """ Procedure function
         params:
             fx - optimization function
             gx - scoring function
             maxitr - number of iterations to run construct/local cycle
         returns: best solution after maxitr cycles"""
-    xprime = sys.maxint # best solution
+    xprime = [] # best solution init
 
     # iterate through multistart construct and local search cycles
     # through each cycle, replace best solution if better found
-    for i in range(maxitr):
-        temporary_solutionx = construct_grasp(g_x, ALPHA) # alpha is greediness defined as initial param
-        temporary_solutionx = localSearch(f_x, temporary_solutionx) # see if var name ok
-        if f_x(temporary_solutionx) < f_x(xprime):
-            xprime = temporary_solutionx
-        i = i+1
+    for _ in range(maxitr):
+        # alpha is greediness defined as initial param
+        temporary_solutionx = construct_grasp(g_xp, ALPHA)
+        temporary_solutionx = localSearch(f_xp, temporary_solutionx)
 
+        # when xprime has len 0 it initializes the first solution
+        if len(xprime) == 0 or f_xp(temporary_solutionx) < f_xp(xprime):
+            xprime = temporary_solutionx
     return xprime
 
 # Constructor function - gene
