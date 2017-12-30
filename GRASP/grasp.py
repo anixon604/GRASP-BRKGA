@@ -10,8 +10,7 @@ import random
 # Constants used for clarity, actual program will use DATA structure below
 NURSES = 20
 HOURS = 3
-DEMAND_PER_HOUR = [2, 2, 1, 1, 1, 2, 2, 3, 4, 6, 6, 7, 5, 8, 8, 7, 6,
-                   6, 4, 3, 4, 3, 3, 3]
+DEMAND_PER_HOUR = [2, 2, 1]
 MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
@@ -79,16 +78,17 @@ def get_candidate_list():
     candidate_set = []
     for i in range(2**DATA['nHours']):
         a_schedule = get_bin(i)
+        # print(a_schedule) #DEBUG---------------
         if checkschedule(a_schedule):
             candidate_set.append(a_schedule)
     return candidate_set
 
-def get_bin(x_in, n_len=HOURS):
+def get_bin(x_in):
     """ Get the binary list representation of x.
     params: x - number to convert, n - number of digits
     returns: boolean list
     """
-    x_str = format(x_in, 'b').zfill(n_len)
+    x_str = format(x_in, 'b').zfill(DATA['nHours'])
     return [int(i) for i in x_str]
 
 
@@ -145,9 +145,10 @@ def g_x(schedule, demand):
         returns: sum of square differences between demand vector and schedule vector
                 a lower score means (BETTER) greater satisfaction.
                 sum([demand_i - schedule_i]^2) for all i in HOURS """
-    score = sys.maxint # score init to inf
+    score = 0 # score init to inf
     for i in range(DATA['nHours']):
         score += (demand[i]-schedule[i])**2
+        # print(demand[i], '-', schedule[i], score) #DEBUG----------------
     return score
 
 def grasp_procedure(f_xp, g_xp, maxitr):
@@ -200,6 +201,9 @@ def construct_grasp(g_xp, alpha):
     candidate_set = get_candidate_list()
     solved = False
 
+    # print('demand: ', demand) #DEBUG------------------
+    # print(candidate_set)
+
     for _ in range(DATA['nNurses']):
         # score all elements in the candidate set
         scored_c_set = [g_xp(sched, demand) for sched in candidate_set]
@@ -207,13 +211,19 @@ def construct_grasp(g_xp, alpha):
         smax = max(scored_c_set)
 
         # create RCL based on top scorers
-        restricted_c_list = [s for s in scored_c_set if s <= smin+alpha*(smax-smin)]
+        restricted_c_list = [c for s, c in zip(scored_c_set, candidate_set)
+                             if s <= smin+0*(smax-smin)]
         # choose random element from RCL to add to solution
         solution_element = random.choice(restricted_c_list)
         # add selected schedule to solution
         possible_solution_x.append(solution_element)
         # remove element's work hours from demand
         demand = [a - b if a > 0 else 0 for a, b in zip(demand, solution_element)]
+
+        #print('scored set', scored_c_set) #DEBUG------------
+        #print('RCL', restricted_c_list) #DEBUG---------
+        #print('selected', solution_element) #DEBUG--------
+        #print('demand', demand) #DEBUG----------
 
         # check if there is any more demand - if demand is satisfied mark solved
         # otherwise continue loop until solved or out of nurses
@@ -232,5 +242,9 @@ def local_search(f_xp, current_solutionx):
                 current_solutionx - constructed solution to improve
         returns: a solution better or equal to input solution
     """
+    # find squared difference / score between current_solution (flattened) 
+    # and demand vector (original)
+    #
+    # for max -> iterate through 
 
     return 0
