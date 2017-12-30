@@ -163,12 +163,12 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     # through each cycle, replace best solution if better found
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
-        temporary_solutionx = construct_grasp(g_xp, ALPHA)
-        temporary_solutionx = localSearch(f_xp, temporary_solutionx)
+        current_solutionx = construct_grasp(g_xp, ALPHA)
+        current_solutionx = local_search(f_xp, current_solutionx)
 
         # when xprime has len 0 it initializes the first solution
-        if len(xprime) == 0 or f_xp(temporary_solutionx) < f_xp(xprime):
-            xprime = temporary_solutionx
+        if len(xprime) == 0 or f_xp(current_solutionx) < f_xp(xprime):
+            xprime = current_solutionx
     return xprime
 
 # Constructor function - gene
@@ -226,5 +226,11 @@ def construct_grasp(g_xp, alpha):
     else:
         raise Warning('No feasible solution')
 
-def localSearch(fx, x):
-    return x
+def local_search(f_xp, current_solutionx):
+    """ Local search / improvement phase
+        params: f_xp - optimization function
+                current_solutionx - constructed solution to improve
+        returns: a solution better or equal to input solution
+    """
+
+    return 0
