@@ -3,11 +3,13 @@ AMMM MIRI Project
 Semester 1: 2017
 Author: Anthony Nixon, Mathieu Chiavassa"""
 
-import sys
+import time
 import random
 
 # Global Params for Defining the Problem
 # Constants used for clarity, actual program will use DATA structure below
+
+# Default Custom DATA set
 NURSES = 20
 HOURS = 3
 DEMAND_PER_HOUR = [2, 2, 1]
@@ -15,16 +17,13 @@ MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
 MAXPRESENCE = 14
-# Run Params
-MAXITR = 10 # iterations of grasp
-ALPHA = 0.5 # greediness of construction, range [0,1]
 
-DATA = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
+CUSTOM = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
         'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
-# TEST SETS
-DATA_SMALL = {
+# TEST SETS - reassign to DATA from main()
+SMALL = {
 	   "nNurses": 12,
 	   "nHours":9,
 	   "minHours": 3,
@@ -34,7 +33,7 @@ DATA_SMALL = {
 	   "demand": [5, 3, 8, 5, 1, 7, 5, 6, 2]
 }
 
-DATA_MID = {
+MID = {
 	   "nNurses": 200,
 	   "nHours":24,
 	   "minHours": 6,
@@ -45,7 +44,7 @@ DATA_MID = {
                77, 88, 22, 34, 55, 22, 55, 23, 22, 11, 12]
 }
 
-DATA_LARGE = {
+LARGE = {
 	   "nNurses": 1800,
 	   "nHours":24,
 	   "minHours": 6,
@@ -56,9 +55,10 @@ DATA_LARGE = {
                597, 1098, 855, 918, 1016, 897, 356, 615, 670, 826, 349]
 }
 
-
-# PROGRAM ENTRY WILL GO HERE -----------------------
-# check a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
+# Run Params
+MAXITR = 10 # iterations of grasp
+ALPHA = 0.5 # greediness of construction, range [0,1]
+DATA = CUSTOM
 
 # UTILITY FUNCTIONS
 def get_candidate_list():
@@ -168,7 +168,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
         current_solutionx = local_search(f_xp, current_solutionx)
 
         # when xprime has len 0 it initializes the first solution
-        if len(xprime) == 0 or f_xp(current_solutionx) < f_xp(xprime):
+        if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
             xprime = current_solutionx
     return xprime
 
@@ -248,3 +248,19 @@ def local_search(f_xp, current_solutionx):
     # for max -> iterate through 
 
     return 0
+
+def main():
+    """ Program entry point """
+    # check a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
+
+
+    t_init = time.time()
+    # execution
+    solution = grasp_procedure(f_x, g_x, MAXITR)
+    t_end = time.time()
+    total = t_end-t_init
+
+    print('Final Solution: ', solution, '\nTime: ', total)
+
+if __name__ == "__main__":
+    main()
