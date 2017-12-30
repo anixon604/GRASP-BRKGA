@@ -3,7 +3,6 @@ AMMM MIRI Project
 Semester 1: 2017
 Author: Anthony Nixon, Mathieu Chiavassa"""
 
-import math
 import sys
 import random
 
@@ -197,11 +196,13 @@ def construct_grasp(g_xp, alpha):
 
         """
     possible_solution_x = [] # init empty solution
-    candidate_set = get_candidate_list
+    demand = DATA['demand'] # initial demand
+    candidate_set = get_candidate_list()
+    solved = False
 
     for _ in range(DATA['nNurses']):
         # score all elements in the candidate set
-        scored_c_set = [g_xp(elem) for elem in candidate_set]
+        scored_c_set = [g_xp(sched, demand) for sched in candidate_set]
         smin = min(scored_c_set)
         smax = max(scored_c_set)
 
@@ -209,25 +210,21 @@ def construct_grasp(g_xp, alpha):
         restricted_c_list = [s for s in scored_c_set if s <= smin+alpha*(smax-smin)]
         # choose random element from RCL to add to solution
         solution_element = random.choice(restricted_c_list)
+        # add selected schedule to solution
         possible_solution_x.append(solution_element)
+        # remove element's work hours from demand
+        demand = [a - b if a > 0 else 0 for a, b in zip(demand, solution_element)]
 
-        # remove element work hours from demand
+        # check if there is any more demand - if demand is satisfied mark solved
+        # otherwise continue loop until solved or out of nurses
+        if max(demand) == 0:
+            solved = True
+            break
 
-
-
-    while candidate_set != []:
-        # score all elements in the candidate set
-        scored_c_set = [g_xp(elem) for elem in candidate_set]
-        smin = min(scored_c_set)
-        smax = max(scored_c_set)
-
-        # create RCL based on top scorers
-        restricted_c_list = [s for s in scored_c_set if s <= smin+alpha*(smax-smin)]
-        # choose random element from RCL to add to solution
-        solution_element = random.choice(restricted_c_list)
-        possible_solution_x.append(solution_element)
-        candidate_set.remove(solution_element)
-    return possible_solution_x
+    if solved:
+        return possible_solution_x
+    else:
+        raise Warning('No feasible solution')
 
 def localSearch(fx, x):
     return x
