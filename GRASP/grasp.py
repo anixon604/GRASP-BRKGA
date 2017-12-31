@@ -10,7 +10,7 @@ import random
 # Constants used for clarity, actual program will use DATA structure below
 
 # Default Custom DATA set
-NURSES = 20
+NURSES = 10
 HOURS = 3
 DEMAND_PER_HOUR = [2, 2, 1]
 MINHOURS = 0
@@ -19,7 +19,7 @@ MAXCONSEC = 3
 MAXPRESENCE = 14
 
 CUSTOM = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
-        'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
+          'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
 # TEST SETS - reassign to DATA from main()
@@ -158,6 +158,12 @@ def grasp_procedure(f_xp, g_xp, maxitr):
             gx - scoring function
             maxitr - number of iterations to run construct/local cycle
         returns: best solution after maxitr cycles"""
+
+    # quick check that there are enough nurses to probably meet demand
+    if DATA['nNurses'] < max(DATA['demand']):
+        raise Warning('Not enough nurses!')
+
+
     xprime = [] # best solution init
 
     # iterate through multistart construct and local search cycles
@@ -165,7 +171,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
         current_solutionx = construct_grasp(g_xp, ALPHA)
-        current_solutionx = local_search(f_xp, current_solutionx)
+        #current_solutionx = local_search(f_xp, current_solutionx)
 
         # when xprime has len 0 it initializes the first solution
         if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
@@ -251,16 +257,16 @@ def local_search(f_xp, current_solutionx):
 
 def main():
     """ Program entry point """
-    # check a) not enough total nurses for demand -> NURSE < DEMAND_PER_HOUR_k for some k
 
-
-    t_init = time.time()
     # execution
-    solution = grasp_procedure(f_x, g_x, MAXITR)
-    t_end = time.time()
-    total = t_end-t_init
-
-    print('Final Solution: ', solution, '\nTime: ', total)
+    try:
+        t_init = time.time()
+        solution = grasp_procedure(f_x, g_x, MAXITR)
+        t_end = time.time()
+        total = t_end-t_init
+        print('Final Solution: ', solution, '\n', 'Time: ', total)
+    except Warning as warn:
+        print(warn.args)
 
 if __name__ == "__main__":
     main()
