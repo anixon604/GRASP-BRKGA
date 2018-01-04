@@ -143,16 +143,17 @@ def g_x(schedule, demand):
     """ Scoring Function for ranking feasible nurse schedules
         params: schedule - a schedule vector of elements 0 or 1 for h hours
                 demand - a demand vector to score against
-        returns: sum of square differences between demand vector and schedule vector
-                a lower score means (BETTER) greater satisfaction.
-                sum([demand_i - schedule_i]^2) for all i in HOURS """
+        returns: exponential scoring allows negative values in score to be
+                very small penalty (positive number), while positive values
+                will penalize more heavily. The case where the diff is 0
+                is not added to score (hence the if statement).
+    """
     score = 0 # score init to inf
     
     for i in range(DATA['nHours']):
         diff = demand[i] - schedule[i] 
         if diff:
-            score += math.exp(demand[i]-schedule[i])
-        # score += (demand[i]-schedule[i])**2
+            score += math.exp(diff)
         # print(demand[i], '-', schedule[i], score) #DEBUG----------------
     return score
 
