@@ -6,7 +6,7 @@ import BRKGA as brkga # BRKGA framework (problem independent)
 import DECODER_DUMMY as decoder # Dgcoder algorithm (problem-dependent)
 from DATA_DUMMY import data # Input data (problem-dependent and instance-dependent)
 from CONFIGURATION import config # Configuration parameters (problem-dependent and execution-dependent)
-#print config
+print config
 # initializations
 numIndividuals=int(config['numIndividuals'])
 chrLength=int(config['chromosomeLength'])
@@ -46,5 +46,5 @@ plt.ylabel('Fitness of best individual')
 plt.axis([0, len(evol), 0,max(evol)+0.5])                     #(chrLength+1)*chrLength/2]
 plt.show()
 
-#print(bestIndividual)
+print(bestIndividual)
 bestIndividual=decoder.infoBestIndividual(bestIndividual)

@@ -9,7 +9,7 @@ from BRKGA import initializePopulation
 def transform(population):
     for i in range(len(population)):
         for j in range(len(population[i]['chr'])):
-            if population[i]['chr'][j] <= 0.5:
+            if population[i]['chr'][j] <= 1.-1.*data['minHours']/data['nHours']:
                 population[i]['solution'][j]=0
             else: population[i]['solution'][j]=1
     return population
@@ -20,9 +20,9 @@ def checkschedule(currentnurse):
     test=0
     sumhours=sum(currentnurse)
     if sumhours < data['minHours'] and sumhours !=0: #Constraint minH
-        test=1
+        test+=1
     if sumhours > data['maxHours']:   #Constraint maxH
-        test=1
+        test+=1
     if sumhours != 0:        #Constraints rests and maxPresence
         i=0
         while currentnurse[i]==0:
@@ -34,9 +34,9 @@ def checkschedule(currentnurse):
         imax=i
         for i in range(imin, imax):
             if currentnurse[i]==0 and currentnurse[i+1]==0:   #Constraints rests
-                test=1
+                test+=1
         if imax-imin+1 > data['maxPresence']:       #Constraints maxPresence
-            test=1
+            test+=1
 
         compteur=0
         for i in range(imin, imax+1):               #Constraints maxConsec
@@ -44,10 +44,10 @@ def checkschedule(currentnurse):
                 compteur+=1
             else:
                 if compteur > data['maxConsec']:
-                    test=1
+                    test+=1
                 compteur = 0
         if compteur > data['maxConsec']:
-            test=1
+            test+=1
     return test
 
 
@@ -55,10 +55,10 @@ def checkschedule(currentnurse):
 def compareworkload(workload):
     error=0
     for i in range(0,data['nHours']):
-        if workload[i]-data['demand'][i] > 0:
+        if (workload[i]-data['demand'][i]) > 0:
             error+=(1.0*workload[i]-1.0*data['demand'][i])/data['nHours']
-        if workload[i]-data['demand'][i] < 0:
-            error += 2.0*abs((workload[i] - data['demand'][i])) / data['nHours']
+        if (workload[i]-data['demand'][i]) < 0:
+            error += 10.0*abs((workload[i] - data['demand'][i]))/data['nHours']
     return error
 
 
@@ -78,13 +78,13 @@ def decode(population,data):
             for j in range(i*data['nHours'], (i+1)*data['nHours']):
                 currentnurse.append(population[x]['solution'][j])
             test=checkschedule(currentnurse)
-            population[x]['fitness'] = population[x]['fitness']+(1.5*test/data['nNurses']) #penalize fitess if bad schedule
+            population[x]['fitness'] += 10.*test/data['nNurses'] #penalize fitness if bad schedule
             for k in range(0, data['nHours']):
                 workload[k]+=currentnurse[k]
         #print(workload)
         error=compareworkload(workload)
 
-        population[x]['fitness'] = population[x]['fitness'] + 0.5*error
+        population[x]['fitness'] += error
     return(population)
 
 
@@ -113,4 +113,5 @@ def infoBestIndividual(bestIndividual):
     #    ind['fitness']=sum(res)
     #return(population)
     
+
 
