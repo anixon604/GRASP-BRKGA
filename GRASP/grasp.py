@@ -4,6 +4,7 @@ Semester 1: 2017
 Author: Anthony Nixon, Mathieu Chiavassa"""
 
 import time
+import math
 import random
 
 # Global Params for Defining the Problem
@@ -11,8 +12,8 @@ import random
 
 # Default Custom DATA set
 NURSES = 10
-HOURS = 3
-DEMAND_PER_HOUR = [2, 2, 1]
+HOURS = 5
+DEMAND_PER_HOUR = [2, 2, 1, 3, 5]
 MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
@@ -148,7 +149,10 @@ def g_x(schedule, demand):
     score = 0 # score init to inf
     
     for i in range(DATA['nHours']):
-        score += (demand[i]-schedule[i])**2
+        diff = demand[i] - schedule[i] 
+        if diff:
+            score += math.exp(demand[i]-schedule[i])
+        # score += (demand[i]-schedule[i])**2
         # print(demand[i], '-', schedule[i], score) #DEBUG----------------
     return score
 
@@ -225,17 +229,18 @@ def construct_grasp(g_xp, alpha):
         # add selected schedule to solution
         possible_solution_x.append(solution_element)
         # remove element's work hours from demand
-        demand = [a - b if a > 0 else 0 for a, b in zip(demand, solution_element)]
+        demand = [a - b for a, b in zip(demand, solution_element)]
 
         #print('scored set', scored_c_set) #DEBUG------------
         #print('RCL', restricted_c_list) #DEBUG---------
         #print('selected', solution_element) #DEBUG--------
-        #print('demand', demand) #DEBUG----------
+        print('demand', demand) #DEBUG----------
 
         # check if there is any more demand - if demand is satisfied mark solved
         # otherwise continue loop until solved or out of nurses
         if max(demand) == 0:
             solved = True
+            print("solved")
             break
 
     if solved:
