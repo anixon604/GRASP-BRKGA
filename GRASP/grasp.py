@@ -13,7 +13,7 @@ import random
 # Default Custom DATA set
 NURSES = 10
 HOURS = 5
-DEMAND_PER_HOUR = [2, 2, 1, 3, 5]
+DEMAND_PER_HOUR = [2, 2, 1, 3, 3]
 MINHOURS = 0
 MAXHOURS = 9
 MAXCONSEC = 3
@@ -255,10 +255,19 @@ def local_search(f_xp, current_solutionx):
                 current_solutionx - constructed solution to improve
         returns: a solution better or equal to input solution
     """
-    # find squared difference / score between current_solution (flattened) 
-    # and demand vector (original)
-    #
-    # for max -> iterate through 
+
+    # START LOOP
+    # Check ALLOCATED nurses MUST be > max(demand) otherwise NOTHING BETTER, break
+    # get min sched length for solution
+    minSchedLen = min([len(i) for i in current_solutionx])
+    # remove first instance of MIN sched
+
+    # sum the columns to find any shortages
+    #   restrict candidate list to those that satisfy shortages
+    #   try swapping each row for ALL candidates and add valid solutions to list
+    # LOOP (break when NO valid solutions found)
+
+    # iterate through solution list and keep minimum (LOCAL MIN!)
 
     return 0
 
@@ -271,10 +280,17 @@ def main():
         solution = grasp_procedure(f_x, g_x, MAXITR)
         t_end = time.time()
         total = t_end-t_init
-        print('Final Solution: ')
+        print('\nFinal Solution: ')
         for i in solution:
             print(i)
-        print('Time: ', total)
+
+        totals = [sum(x) for x in zip(*solution)]
+        demand = DATA['demand']
+        diff = [a - b for a, b in zip(totals, demand)]
+        print("\nTotals: " + str(totals))
+        print("Demand: " + str(demand))
+        print("Diff: " + str(diff))
+        print('Time: ' + str(total))
     except Warning as warn:
         print(warn.args)
 
