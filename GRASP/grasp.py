@@ -24,7 +24,7 @@ CUSTOM = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': 
 
 # TEST SETS - reassign to DATA from main()
 SMALL = {
-	   "nNurses": 12,
+	   "nNurses": 30,
 	   "nHours":9,
 	   "minHours": 3,
 	   "maxHours": 6,
@@ -146,6 +146,7 @@ def g_x(schedule, demand):
                 a lower score means (BETTER) greater satisfaction.
                 sum([demand_i - schedule_i]^2) for all i in HOURS """
     score = 0 # score init to inf
+    
     for i in range(DATA['nHours']):
         score += (demand[i]-schedule[i])**2
         # print(demand[i], '-', schedule[i], score) #DEBUG----------------
@@ -218,7 +219,7 @@ def construct_grasp(g_xp, alpha):
 
         # create RCL based on top scorers
         restricted_c_list = [c for s, c in zip(scored_c_set, candidate_set)
-                             if s <= smin+0*(smax-smin)]
+                             if s <= smin+alpha*(smax-smin)]
         # choose random element from RCL to add to solution
         solution_element = random.choice(restricted_c_list)
         # add selected schedule to solution
@@ -264,7 +265,10 @@ def main():
         solution = grasp_procedure(f_x, g_x, MAXITR)
         t_end = time.time()
         total = t_end-t_init
-        print('Final Solution: ', solution, '\n', 'Time: ', total)
+        print('Final Solution: ')
+        for i in solution:
+            print(i)
+        print('Time: ', total)
     except Warning as warn:
         print(warn.args)
 
