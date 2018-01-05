@@ -3,6 +3,7 @@
 * Author: mathieu.chiavassa, anthony.nixon
 * Creation Date: 19/12/2017 at 18:20:16
 *********************************************/
+
 // A
 int numNurses = ...;
 int hours = ...;
@@ -18,47 +19,49 @@ int maxConsec = ...;
 int maxPresence = ...;
 
 // A
-dvar boolean works[n in N][h in H]; // this set of variable should suffice for A). Tells whether nurse n works at hour h
-dvar boolean worksBefore[n in N][h in H]; // no nurse can rest more than one consec 1/3
-dvar boolean worksAfter[n in N][h in H]; // 2/3
-dvar boolean rests[n in N][h in H]; // 3/3
-dvar boolean used[n in N];
+dvar boolean works[n in N][h in H]; 	  // Whether nurse n works at hour h
+dvar boolean worksBefore[n in N][h in H]; // Relative to a given hour, tracks if the nurse works before
+dvar boolean worksAfter[n in N][h in H];  // Relative to a given hour, tracks if the nurse works after
+dvar boolean rests[n in N][h in H]; 	  // Whether a nurse rests at hour h
+dvar boolean used[n in N];				  // If nurse n is used or not
 
-minimize sum(n in N) used[n]; // do not change this for A)
+minimize sum(n in N) used[n]; 			  // Objective is to minimize the number of nurses 
 subject to {
 
-	// the number of provided nurses is greater or equal to the demand
+	// Constraint 1
+	// The number of provided nurses must be greater or equal to the demand of each hour
 	forall(h in H)
 		sum(n in N) works[n][h] >= demand[h]; 
 
-
-	// Each nurse should work at least minHours hours.
+	// Constraint 2
+	// Each nurse that is working must work at least minHours.
 	forall(n in N)
 		sum (h in H) works[n][h] >= minHours*used[n];
 
-	// Each nurse should work at most maxHours hours.
+	// Constraint 3
+	// No nurse that is working can work more than maxHours hours.
 	forall(n in N)
 		sum (h in H) works[n][h] <= maxHours*used[n];
 
-	// Each nurse should work at most maxConsec consecutive hours.
+	// Constraint 4
+	// Each nurse should work at most maxConsec consecutive hours - must have a break to work more.
+	// - algorithm uses sliding window comparisons
 	forall(n in N)
 		forall(i in 1..(hours-maxConsec))
 			sum(j in i..(i+maxConsec)) works[n][j] <= maxConsec*used[n];
 
-	// No nurse can stay at the hospital for more than max Presence 
-	// hours (e.g. if maxP resence is 7, it is OK that a nurse works 
-	// at 2am and also at 8am, but it not possible that he/she works 
-	// at 2am and also at 9am).
+	// Constraint 5 and 6
+	// No nurse can stay at the hospital for more than maxPresence number of hours
+	// Rests must be no longer than one hour in length
 	forall(n in N)
 		forall (h in H: h <= hours-maxPresence)
 			worksBefore[n][h] + worksAfter[n][h+maxPresence] <= 1;
-
+	
 	forall(n in N)
 		forall (h in H: h <= hours-1){
-			worksAfter[n][h] >= worksAfter[n][h+1]; // legal: 11111110, illegal: 11111010
-			worksBefore[n][h] <= worksBefore[n][h+1]; // legal: 00011111, illegal: 00111110
-			rests[n][h] + rests[n][h+1] <= 1;
-			// legal: 00010100, illegal: 00110010
+			worksAfter[n][h] >= worksAfter[n][h+1];   // allowed: 11110, rejected: 10101
+			worksBefore[n][h] <= worksBefore[n][h+1]; // allowed: 00111, rejected: 01110
+			rests[n][h] + rests[n][h+1] <= 1;         // allowed: 10100, rejected: 11001
 		}
 
 	forall(n in N)
