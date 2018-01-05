@@ -107,7 +107,7 @@ def checkschedule(schedule): # tested working
         e) No nurse can rest for more than 1 consecutive hour
         f) Each nurse should work at most maxConsec hours
     """
-    test = 0 # default to fail (due to inverse at return)
+    test = 0 # default to fail
     sumhours = sum(schedule)
     if sumhours == 0:
         test = 1 # automatic pass
@@ -149,9 +149,9 @@ def g_x(schedule, demand):
                 is not added to score (hence the if statement).
     """
     score = 0 # score init to inf
-    
+
     for i in range(DATA['nHours']):
-        diff = demand[i] - schedule[i] 
+        diff = demand[i] - schedule[i]
         if diff:
             score += math.exp(diff)
         # print(demand[i], '-', schedule[i], score) #DEBUG----------------
@@ -268,6 +268,22 @@ def local_search(f_xp, current_solutionx):
     # LOOP (break when NO valid solutions found)
 
     # iterate through solution list and keep minimum (LOCAL MIN!)
+
+    """Final Solution: 
+    [1, 1, 1, 0, 1]
+    [0, 1, 0, 1, 0]
+    [1, 1, 0, 1, 1]
+    [1, 1, 0, 1, 1]
+    Totals: [3, 4, 1, 3, 3]
+    Demand: [2, 2, 1, 3, 3]
+    Diff: [1, 2, 0, 0, 0]
+    Time: 0.00802898406982 """
+    # GET closest row to DIFF (euclidian)
+    # in this case ITS [0,1,0,1,0]
+    # Subtract the row from Diff and delete from SOL
+    # [1,2,0,0,0] - [0,1,0,1,0] = [1,1,0,-1,0]
+    # find first row with zero at -1 positions
+    # 
 
     return 0
 
