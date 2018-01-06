@@ -157,6 +157,10 @@ def g_x(schedule, demand):
         # print(demand[i], '-', schedule[i], score) #DEBUG----------------
     return score
 
+def euclidian(x, y):
+    """ return euclidean distance of two lists """
+    return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x, y)]))
+
 def grasp_procedure(f_xp, g_xp, maxitr):
     """ Procedure function
         params:
@@ -255,19 +259,24 @@ def local_search(f_xp, current_solutionx):
                 current_solutionx - constructed solution to improve
         returns: a solution better or equal to input solution
     """
-
-    # START LOOP
-    # Check ALLOCATED nurses MUST be > max(demand) otherwise NOTHING BETTER, break
-    # get min sched length for solution
-    minSchedLen = min([len(i) for i in current_solutionx])
-    # remove first instance of MIN sched
-
-    # sum the columns to find any shortages
-    #   restrict candidate list to those that satisfy shortages
-    #   try swapping each row for ALL candidates and add valid solutions to list
-    # LOOP (break when NO valid solutions found)
-
-    # iterate through solution list and keep minimum (LOCAL MIN!)
+    # Initialize best_solution
+    # WHILE(len(sol) > max(demand))
+    # 1. remove row with least effect on demand (closest euclidean to diff)
+    # 2. get new diff from remaining rows (totals - demand)
+    # 3. get sum(negative values in diff)
+    #        if sum(negdiff) == 0 then CONTINUE (solution still valid)
+    # 4. iterate through rows in candidate list
+    #        if sum(row) >= sum(negdiff) then check for solution
+    #           if solution found store and GOTO 1
+    #
+    # IF solution NOT found then OPTIMAL, IF max(demand) == len(solution) then OPTIMAL
+    demand = DATA['demand']
+    totals = [sum(x) for x in zip(*solution)]
+    diff = [a - b for a, b in zip(totals, demand)]
+    
+    best_solution = current_solutionx
+    #while len(best_solution) > max(demand):
+        
 
     """Final Solution: 
     [1, 1, 1, 0, 1]
@@ -283,7 +292,9 @@ def local_search(f_xp, current_solutionx):
     # Subtract the row from Diff and delete from SOL
     # [1,2,0,0,0] - [0,1,0,1,0] = [1,1,0,-1,0]
     # find first row with zero at -1 positions
-    # 
+
+    
+
 
     return 0
 
