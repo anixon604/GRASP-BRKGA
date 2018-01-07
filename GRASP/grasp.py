@@ -58,9 +58,9 @@ LARGE = {
 }
 
 # Run Params
-MAXITR = 10 # iterations of grasp
-ALPHA = 0 # greediness of construction, range [0,1]
-DATA = SMALL # data set to use
+MAXITR = 1 # iterations of grasp
+ALPHA = 0.8 # greediness of construction, range [0,1]
+DATA = CUSTOM # data set to use
 
 # UTILITY FUNCTIONS
 def get_candidate_list():
@@ -185,7 +185,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
         current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
-        #current_solutionx = local_search(f_xp, current_solutionx, candidate_set)
+        current_solutionx = local_search(f_xp, current_solutionx, candidate_set)
 
         # when xprime has len 0 it initializes the first solution
         if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
@@ -242,7 +242,7 @@ def construct_grasp(g_xp, alpha, candidate_set):
         #print('scored set', scored_c_set) #DEBUG------------
         #print('RCL', restricted_c_list) #DEBUG---------
         #print('selected', solution_element) #DEBUG--------
-        print('demand', demand) #DEBUG----------
+        #print('demand', demand) #DEBUG----------
 
         # check if there is any more demand - if demand is satisfied mark solved
         # otherwise continue loop until solved or out of nurses
@@ -256,91 +256,51 @@ def construct_grasp(g_xp, alpha, candidate_set):
     else:
         raise Warning('No feasible solution')
 
-def local_search(f_xp, current_solutionx, candidate_set):
-    """ Local search / improvement phase
-        params: f_xp - optimization function
-                current_solutionx - constructed solution to improve
-        returns: a solution better or equal to input solution
-    """
-    # Initialize best_solution = current_solutionx
-    # WHILE(len(sol) > max(demand))
-    # 1. remove row with least effect on demand (closest euclidean to diff)
-    # 2. get new diff from remaining rows (totals - demand)
-    # 3. get sum(negative values in diff)
-    #        if sum(negdiff) == 0 then CONTINUE (solution still valid)
-    # 4. iterate through rows in candidate list
-    #        if sum(row) >= sum(negdiff) then check for solution
-    #           if solution found store and GOTO 1
-    #
-    # IF solution NOT found then OPTIMAL, IF max(demand) == len(solution) then OPTIMAL
+def get_num_negs(list):
+    return len([i for i, a in enumerate(list) if a < 0])
+
+def print_sol(solution):
+    print "\n" # blank line
+    for i in solution:
+        print(i)
     demand = DATA['demand']
-    
-    best_solution = current_solutionx
-    while len(best_solution) > max(demand):
-        # get totals of current proposed solution
-        totals = [sum(x) for x in zip(best_solution)]
-        diff = [a - b for a, b in zip(totals, demand)]
+    totals = [sum(x) for x in zip(*solution)]
+    tvd_diff = [a - b for a, b in zip(totals, demand)]
+    print("\nTotals: " + str(totals))
+    print("Demand: " + str(demand))
+    print("Diff: " + str(tvd_diff))
 
-        # find lowest euclidian
-        lowest_eucl_elem = []
-        min_eucl_score = sys.maxint
-        for elem in best_solution:
-            score = euclidian(diff, elem)
-            if score < min_eucl_score:
-                lowest_eucl_elem = elem
-        
-        # update diff with removed row (diff - row)
-        diff = diff - lowest_eucl_elem
-        temp_solution = best_solution
-        temp_solution.remove(lowest_eucl_elem) # remove row
+def local_search(f_xp, current_solutionx, candidate_set):
+    neighbor_set = [a for a in N_x(current_solutionx, candidate_set) if f_xp(a) < f_xp(current_solutionx)]
 
-        # calculate negatives in diff
-        #neg_values_diff = len([a for a in diff if a < 0])
+    x_elem = []
+    if len(neighbor_set) == 0:
+        x_elem = current_solutionx
+    while len(neighbor_set) > 0:
+        # select a random x from neighbor_set and then make sub list
+        x_elem = random.choice(neighbor_set)
+        neighbor_set = [a for a in N_x(current_solutionx, candidate_set) if f_xp(a) < f_xp(x_elem)]
 
-        # get indexes of negative values in diff
-        # - negs are unfilled demand to be re-added by row swaps
-        neg_values_ind = [i for i, a in enumerate(diff) if a < 0]
-
-        # if - need to rebuild valid solution if any demand lost
-        if len(neg_values_ind) > 0:
-            for i in range(len(temp_solution)):
-                for candidate in candidate_set:
-                    # check for valid candidate
-                    valid = True
-                    # Note: the difference between original row i and
-                    # the candidate row must satisfy the neg_vals
-                    # being replaced
-                    for ind in neg_values_ind:
-                        if candidate[ind] >= 0:
-                            valid = False
-                    if valid: # swap row i for candidate and check
-                        temp_solution[i] = candidate
-
-                       # diff between i and candidate  
-
-        else: # solution is valid start loop again
-            continue
-        
-
-    """Final Solution: 
-    [1, 1, 1, 0, 1]
-    [0, 1, 0, 1, 0]
-    [1, 1, 0, 1, 1]
-    [1, 1, 0, 1, 1]
-    Totals: [3, 4, 1, 3, 3]
-    Demand: [2, 2, 1, 3, 3]
-    Diff: [1, 2, 0, 0, 0]
-    Time: 0.00802898406982 """
-    # GET closest row to DIFF (euclidian)
-    # in this case ITS [0,1,0,1,0]
-    # Subtract the row from Diff and delete from SOL
-    # [1,2,0,0,0] - [0,1,0,1,0] = [1,1,0,-1,0]
-    # find first row with zero at -1 positions
-
-    
+    return x_elem
 
 
-    return 0
+def N_x(solution, candidate_set):
+    # Neighbor set will be all combinations of row removals where demand diff vector has NO NEGS
+    neighbor_set = []
+    demand = DATA['demand']
+    totals = [sum(x) for x in zip(*solution)]
+    tvd_diff = [a - b for a, b in zip(totals, demand)]
+
+    for _, row_i in enumerate(solution):
+        temp_solution = solution
+        row_diff = [a-b for a, b in zip(tvd_diff, row_i)] # calculate new diff with row removal
+        negs_count = get_num_negs(row_diff) # gets negs
+
+        if(negs_count) == 0:
+            temp_solution.remove(row_i)
+            neighbor_set.append(temp_solution)
+
+    return neighbor_set
 
 def main():
     """ Program entry point """
@@ -351,16 +311,7 @@ def main():
         solution = grasp_procedure(f_x, g_x, MAXITR)
         t_end = time.time()
         total = t_end-t_init
-        print('\nFinal Solution: ')
-        for i in solution:
-            print(i)
-
-        totals = [sum(x) for x in zip(*solution)]
-        demand = DATA['demand']
-        diff = [a - b for a, b in zip(totals, demand)]
-        print("\nTotals: " + str(totals))
-        print("Demand: " + str(demand))
-        print("Diff: " + str(diff))
+        print_sol(solution)
         print('Time: ' + str(total))
     except Warning as warn:
         print(warn.args)
