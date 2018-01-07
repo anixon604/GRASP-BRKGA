@@ -185,6 +185,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
         current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
+        print_sol(current_solutionx) # DEBUG --- PRINT Constructed Feasible
         current_solutionx = local_search(f_xp, current_solutionx, candidate_set)
 
         # when xprime has len 0 it initializes the first solution
@@ -279,7 +280,7 @@ def local_search(f_xp, current_solutionx, candidate_set):
     while len(neighbor_set) > 0:
         # select a random x from neighbor_set and then make sub list
         x_elem = random.choice(neighbor_set)
-        neighbor_set = [a for a in N_x(current_solutionx, candidate_set) if f_xp(a) < f_xp(x_elem)]
+        neighbor_set = [a for a in N_x(x_elem, candidate_set) if f_xp(a) < f_xp(x_elem)]
 
     return x_elem
 
@@ -292,7 +293,7 @@ def N_x(solution, candidate_set):
     tvd_diff = [a - b for a, b in zip(totals, demand)]
 
     for _, row_i in enumerate(solution):
-        temp_solution = solution
+        temp_solution = list(solution)
         row_diff = [a-b for a, b in zip(tvd_diff, row_i)] # calculate new diff with row removal
         negs_count = get_num_negs(row_diff) # gets negs
 
