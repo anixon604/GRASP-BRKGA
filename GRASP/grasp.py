@@ -5,6 +5,7 @@ Author: Anthony Nixon, Mathieu Chiavassa"""
 
 import time
 import math
+import sys
 import random
 
 # Global Params for Defining the Problem
@@ -58,8 +59,8 @@ LARGE = {
 
 # Run Params
 MAXITR = 10 # iterations of grasp
-ALPHA = 0.5 # greediness of construction, range [0,1]
-DATA = CUSTOM
+ALPHA = 0 # greediness of construction, range [0,1]
+DATA = SMALL # data set to use
 
 # UTILITY FUNCTIONS
 def get_candidate_list():
@@ -158,7 +159,10 @@ def g_x(schedule, demand):
     return score
 
 def euclidian(x, y):
-    """ return euclidean distance of two lists """
+    """ euclidean distance of two lists 
+        params: x - diff vector, y - comparison vector
+        returns: number score
+    """
     return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x, y)]))
 
 def grasp_procedure(f_xp, g_xp, maxitr):
@@ -173,15 +177,15 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     if DATA['nNurses'] < max(DATA['demand']):
         raise Warning('Not enough nurses!')
 
-
+    candidate_set = get_candidate_list()
     xprime = [] # best solution init
 
     # iterate through multistart construct and local search cycles
     # through each cycle, replace best solution if better found
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
-        current_solutionx = construct_grasp(g_xp, ALPHA)
-        #current_solutionx = local_search(f_xp, current_solutionx)
+        current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
+        #current_solutionx = local_search(f_xp, current_solutionx, candidate_set)
 
         # when xprime has len 0 it initializes the first solution
         if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
@@ -189,7 +193,7 @@ def grasp_procedure(f_xp, g_xp, maxitr):
     return xprime
 
 # Constructor function - gene
-def construct_grasp(g_xp, alpha):
+def construct_grasp(g_xp, alpha, candidate_set):
     """ Constructor function for GRASP
         params:
             gx - scoring function
@@ -214,7 +218,6 @@ def construct_grasp(g_xp, alpha):
         """
     possible_solution_x = [] # init empty solution
     demand = DATA['demand'] # initial demand
-    candidate_set = get_candidate_list()
     solved = False
 
     # print('demand: ', demand) #DEBUG------------------
@@ -253,13 +256,13 @@ def construct_grasp(g_xp, alpha):
     else:
         raise Warning('No feasible solution')
 
-def local_search(f_xp, current_solutionx):
+def local_search(f_xp, current_solutionx, candidate_set):
     """ Local search / improvement phase
         params: f_xp - optimization function
                 current_solutionx - constructed solution to improve
         returns: a solution better or equal to input solution
     """
-    # Initialize best_solution
+    # Initialize best_solution = current_solutionx
     # WHILE(len(sol) > max(demand))
     # 1. remove row with least effect on demand (closest euclidean to diff)
     # 2. get new diff from remaining rows (totals - demand)
@@ -271,11 +274,52 @@ def local_search(f_xp, current_solutionx):
     #
     # IF solution NOT found then OPTIMAL, IF max(demand) == len(solution) then OPTIMAL
     demand = DATA['demand']
-    totals = [sum(x) for x in zip(*solution)]
-    diff = [a - b for a, b in zip(totals, demand)]
     
     best_solution = current_solutionx
-    #while len(best_solution) > max(demand):
+    while len(best_solution) > max(demand):
+        # get totals of current proposed solution
+        totals = [sum(x) for x in zip(best_solution)]
+        diff = [a - b for a, b in zip(totals, demand)]
+
+        # find lowest euclidian
+        lowest_eucl_elem = []
+        min_eucl_score = sys.maxint
+        for elem in best_solution:
+            score = euclidian(diff, elem)
+            if score < min_eucl_score:
+                lowest_eucl_elem = elem
+        
+        # update diff with removed row (diff - row)
+        diff = diff - lowest_eucl_elem
+        temp_solution = best_solution
+        temp_solution.remove(lowest_eucl_elem) # remove row
+
+        # calculate negatives in diff
+        #neg_values_diff = len([a for a in diff if a < 0])
+
+        # get indexes of negative values in diff
+        # - negs are unfilled demand to be re-added by row swaps
+        neg_values_ind = [i for i, a in enumerate(diff) if a < 0]
+
+        # if - need to rebuild valid solution if any demand lost
+        if len(neg_values_ind) > 0:
+            for i in range(len(temp_solution)):
+                for candidate in candidate_set:
+                    # check for valid candidate
+                    valid = True
+                    # Note: the difference between original row i and
+                    # the candidate row must satisfy the neg_vals
+                    # being replaced
+                    for ind in neg_values_ind:
+                        if candidate[ind] >= 0:
+                            valid = False
+                    if valid: # swap row i for candidate and check
+                        temp_solution[i] = candidate
+
+                       # diff between i and candidate  
+
+        else: # solution is valid start loop again
+            continue
         
 
     """Final Solution: 
