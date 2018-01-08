@@ -139,7 +139,7 @@ def n_x(solution):
     totals = [sum(x) for x in zip(*solution)]
     tvd_diff = [a - b for a, b in zip(totals, demand)]
 
-    for _, row_i in enumerate(solution):
+    for row_i in solution:
         temp_solution = list(solution)
         row_diff = [a-b for a, b in zip(tvd_diff, row_i)] # calculate new diff with row removal
         negs_count = get_num_negs(row_diff) # gets negs
@@ -211,15 +211,15 @@ def local_search(current_solutionx):
     """
     neighbor_set = [a for a in n_x(current_solutionx) if f_x(a) < f_x(current_solutionx)]
 
-    x_elem = []
+    best_neighbor = []
     if len(neighbor_set) == 0:
-        x_elem = current_solutionx
+        best_neighbor = current_solutionx
     while len(neighbor_set) > 0:
         # select a random x from neighbor_set and then make sub list
-        x_elem = random.choice(neighbor_set)
-        neighbor_set = [a for a in n_x(x_elem) if f_x(a) < f_x(x_elem)]
+        best_neighbor = random.choice(neighbor_set)
+        neighbor_set = [a for a in n_x(best_neighbor) if f_x(a) < f_x(best_neighbor)]
 
-    return x_elem
+    return best_neighbor
 
 def grasp_procedure(alpha, maxitr):
     """ Procedure function
