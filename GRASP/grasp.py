@@ -15,13 +15,6 @@ DATA = data.SMALL # <---- CHOOSE DATA SET HERE
 #===========================================
 
 # UTILITY FUNCTIONS
-def euclidian(x_list, y_list):
-    """ euclidean distance of two lists
-        params: x - diff vector, y - comparison vector
-        returns: number score
-    """
-    return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x_list, y_list)]))
-
 def get_num_negs(list_x):
     """ params: list of integers
         returns: number of negative values in list
@@ -58,7 +51,6 @@ def get_candidate_list():
     candidate_set = []
     for i in range(2**DATA['nHours']):
         a_schedule = get_bin(i)
-        # print(a_schedule) #DEBUG---------------
         if checkschedule_constraints(a_schedule):
             candidate_set.append(a_schedule)
     return candidate_set
@@ -189,9 +181,6 @@ def construct_grasp(g_xp, alpha, candidate_set):
     demand = DATA['demand'] # initial demand
     solved = False
 
-    # print('demand: ', demand) #DEBUG------------------
-    # print(candidate_set)
-
     for _ in range(DATA['nNurses']):
         # score all elements in the candidate set
         scored_c_set = [g_xp(sched, demand) for sched in candidate_set]
@@ -207,11 +196,6 @@ def construct_grasp(g_xp, alpha, candidate_set):
         possible_solution_x.append(solution_element)
         # remove element's work hours from demand
         demand = [a - b for a, b in zip(demand, solution_element)]
-
-        #print('scored set', scored_c_set) #DEBUG------------
-        #print('RCL', restricted_c_list) #DEBUG---------
-        #print('selected', solution_element) #DEBUG--------
-        #print('demand', demand) #DEBUG----------
 
         # check if there is any more demand - if demand is satisfied mark solved
         # otherwise continue loop until solved or out of nurses
