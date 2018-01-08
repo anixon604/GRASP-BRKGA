@@ -8,18 +8,6 @@ import math
 import random
 import data
 
-# Quick Custom DATA set
-NURSES = 10
-HOURS = 5
-DEMAND_PER_HOUR = [2, 2, 1, 3, 3]
-MINHOURS = 0
-MAXHOURS = 9
-MAXCONSEC = 3
-MAXPRESENCE = 14
-
-CUSTOM = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': MAXHOURS,
-          'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
-
 # Run Params ===============================
 MAXITR = 10 # iterations of grasp
 ALPHA = 0.35 # greediness of construction, range [0,1]
@@ -44,7 +32,6 @@ def print_sol(solution):
     """ params: a list solution of nurse schedule vectors
         prints to console matrix and details
     """
-    print "\n" # blank line
     for i in solution:
         print(i)
     demand = DATA['demand']
@@ -230,7 +217,6 @@ def construct_grasp(g_xp, alpha, candidate_set):
         # otherwise continue loop until solved or out of nurses
         if max(demand) == 0:
             solved = True
-            print("solved")
             break
 
     if solved:
@@ -288,6 +274,8 @@ def main():
         solution = grasp_procedure(f_x, g_x, MAXITR)
         t_end = time.time()
         total = t_end-t_init
+
+        print("\nFINAL SOLUTION:")
         print_sol(solution)
         print('Time: ' + str(total))
     except Warning as warn:
