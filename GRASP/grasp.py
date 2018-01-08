@@ -54,7 +54,7 @@ def get_candidate_list():
 
 def get_bin(x_in):
     """ Get the binary list representation of x.
-    params: x - number to convert, n - number of digits
+    params: x_in - number to convert
     returns: boolean list/vector
     """
     x_str = format(x_in, 'b').zfill(DATA['nHours'])
@@ -270,4 +270,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
