@@ -5,13 +5,9 @@ Author: Anthony Nixon, Mathieu Chiavassa"""
 
 import time
 import math
-import sys
 import random
 
-# Global Params for Defining the Problem
-# Constants used for clarity, actual program will use DATA structure below
-
-# Default Custom DATA set
+# Quick Custom DATA set
 NURSES = 10
 HOURS = 5
 DEMAND_PER_HOUR = [2, 2, 1, 3, 3]
@@ -24,7 +20,7 @@ CUSTOM = {'nNurses': NURSES, 'nHours': HOURS, 'minHours': MINHOURS, 'maxHours': 
           'maxPresence': MAXPRESENCE, 'maxConsec': MAXCONSEC, 'demand': DEMAND_PER_HOUR}
 
 
-# TEST SETS - reassign to DATA from main()
+# TEST SETS
 SMALL = {
 	   "nNurses": 30,
 	   "nHours":9,
@@ -57,15 +53,43 @@ LARGE = {
                597, 1098, 855, 918, 1016, 897, 356, 615, 670, 826, 349]
 }
 
-# Run Params
-MAXITR = 1 # iterations of grasp
-ALPHA = 0.8 # greediness of construction, range [0,1]
-DATA = CUSTOM # data set to use
+# Run Params ===============================
+MAXITR = int(1800*1.5) # iterations of grasp
+ALPHA = 0.35 # greediness of construction, range [0,1]
+DATA = LARGE # <---- CHOOSE DATA SET HERE
+#===========================================
 
 # UTILITY FUNCTIONS
+def euclidian(x_list, y_list):
+    """ euclidean distance of two lists
+        params: x - diff vector, y - comparison vector
+        returns: number score
+    """
+    return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x_list, y_list)]))
+
+def get_num_negs(list_x):
+    """ params: list of integers
+        returns: number of negative values in list
+    """
+    return len([i for i, a in enumerate(list_x) if a < 0])
+
+def print_sol(solution):
+    """ params: a list solution of nurse schedule vectors
+        prints to console matrix and details
+    """
+    print "\n" # blank line
+    for i in solution:
+        print(i)
+    demand = DATA['demand']
+    totals = [sum(x) for x in zip(*solution)]
+    tvd_diff = [a - b for a, b in zip(totals, demand)]
+    print("\nNumber Nurses: " + str(len(solution)))
+    print("Totals: " + str(totals))
+    print("Demand: " + str(demand))
+    print("Diff: " + str(tvd_diff))
+
 def get_candidate_list():
-    """ Loads valid candidate schedule from file IF EXISTS
-        OR Generates permutations for candiate list
+    """ Generates permutations for candiate list
         input: number of HOURS
         returns: initial candidate list of feasible work schedules
 
@@ -81,27 +105,26 @@ def get_candidate_list():
     for i in range(2**DATA['nHours']):
         a_schedule = get_bin(i)
         # print(a_schedule) #DEBUG---------------
-        if checkschedule(a_schedule):
+        if checkschedule_constraints(a_schedule):
             candidate_set.append(a_schedule)
     return candidate_set
 
 def get_bin(x_in):
     """ Get the binary list representation of x.
     params: x - number to convert, n - number of digits
-    returns: boolean list
+    returns: boolean list/vector
     """
     x_str = format(x_in, 'b').zfill(DATA['nHours'])
     return [int(i) for i in x_str]
 
-
-def checkschedule(schedule): # tested working
+# CONSTRAINT CHECK, OBJ, SCORING, NEIGHBOR FUNCTIONS
+def checkschedule_constraints(schedule):
     """ Checks a shedule against constraints
         params: a schedule as boolean list
         returns: boolean value whether schedule conforms to constraint or not
 
         Constraint Description:
         a) the number of provided nurses is greater or equal to the demand
-
         b) Each nurse should work at least minHours hours.
         c) Each nurse should work at most maxHours hours.
         d) No nurse can stay at the hospital for more than maxPresence hours
@@ -149,51 +172,42 @@ def g_x(schedule, demand):
                 will penalize more heavily. The case where the diff is 0
                 is not added to score (hence the if statement).
     """
-    score = 0 # score init to inf
-
+    score = 0
+    maxd = max(demand)
     for i in range(DATA['nHours']):
         diff = demand[i] - schedule[i]
         if diff:
-            score += math.exp(diff)
-        # print(demand[i], '-', schedule[i], score) #DEBUG----------------
+            score += math.exp(diff/maxd)
     return score
 
-def euclidian(x, y):
-    """ euclidean distance of two lists 
-        params: x - diff vector, y - comparison vector
-        returns: number score
+def n_x(solution):
+    """ Neighborhood function for finding similar solutions in neighborhood
+        params: solution - a feasible solution matrix
+        returns: set of all solutions in the neighborhood
+
+        Neighbor is defined as all combinations of row removals where demand is still
+        satisfied. - To quickly check if demand is still satisfied we use a difference
+        vector between the current solution staffing totals vs the demand totals, a
+        NEGATIVE value in this vector means there is UNSATISFIED demand so by counting
+        occurances of negatives we can accept or reject solutions.
     """
-    return math.sqrt(sum([(a - b) ** 2 for a, b in zip(x, y)]))
+    neighbor_set = []
+    demand = DATA['demand']
+    totals = [sum(x) for x in zip(*solution)]
+    tvd_diff = [a - b for a, b in zip(totals, demand)]
 
-def grasp_procedure(f_xp, g_xp, maxitr):
-    """ Procedure function
-        params:
-            fx - optimization function
-            gx - scoring function
-            maxitr - number of iterations to run construct/local cycle
-        returns: best solution after maxitr cycles"""
+    for _, row_i in enumerate(solution):
+        temp_solution = list(solution)
+        row_diff = [a-b for a, b in zip(tvd_diff, row_i)] # calculate new diff with row removal
+        negs_count = get_num_negs(row_diff) # gets negs
 
-    # quick check that there are enough nurses to probably meet demand
-    if DATA['nNurses'] < max(DATA['demand']):
-        raise Warning('Not enough nurses!')
+        if(negs_count) == 0:
+            temp_solution.remove(row_i)
+            neighbor_set.append(temp_solution)
 
-    candidate_set = get_candidate_list()
-    xprime = [] # best solution init
+    return neighbor_set
 
-    # iterate through multistart construct and local search cycles
-    # through each cycle, replace best solution if better found
-    for _ in range(maxitr):
-        # alpha is greediness defined as initial param
-        current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
-        print_sol(current_solutionx) # DEBUG --- PRINT Constructed Feasible
-        current_solutionx = local_search(f_xp, current_solutionx, candidate_set)
-
-        # when xprime has len 0 it initializes the first solution
-        if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
-            xprime = current_solutionx
-    return xprime
-
-# Constructor function - gene
+# GRASP PROCEDURE, CONSTRUCTOR, LOCAL SEARCH
 def construct_grasp(g_xp, alpha, candidate_set):
     """ Constructor function for GRASP
         params:
@@ -257,22 +271,11 @@ def construct_grasp(g_xp, alpha, candidate_set):
     else:
         raise Warning('No feasible solution')
 
-def get_num_negs(list):
-    return len([i for i, a in enumerate(list) if a < 0])
-
-def print_sol(solution):
-    print "\n" # blank line
-    for i in solution:
-        print(i)
-    demand = DATA['demand']
-    totals = [sum(x) for x in zip(*solution)]
-    tvd_diff = [a - b for a, b in zip(totals, demand)]
-    print("\nTotals: " + str(totals))
-    print("Demand: " + str(demand))
-    print("Diff: " + str(tvd_diff))
-
-def local_search(f_xp, current_solutionx, candidate_set):
-    neighbor_set = [a for a in N_x(current_solutionx, candidate_set) if f_xp(a) < f_xp(current_solutionx)]
+def local_search(f_xp, current_solutionx):
+    """ params: f_xp - objective function, current_solutionx - a feasible solution
+        returns: best solution from neighbors N_x()
+    """
+    neighbor_set = [a for a in n_x(current_solutionx) if f_xp(a) < f_xp(current_solutionx)]
 
     x_elem = []
     if len(neighbor_set) == 0:
@@ -280,28 +283,35 @@ def local_search(f_xp, current_solutionx, candidate_set):
     while len(neighbor_set) > 0:
         # select a random x from neighbor_set and then make sub list
         x_elem = random.choice(neighbor_set)
-        neighbor_set = [a for a in N_x(x_elem, candidate_set) if f_xp(a) < f_xp(x_elem)]
+        neighbor_set = [a for a in n_x(x_elem) if f_xp(a) < f_xp(x_elem)]
 
     return x_elem
 
+def grasp_procedure(f_xp, g_xp, maxitr):
+    """ Procedure function
+        params:
+            fx - optimization function
+            gx - scoring function
+            maxitr - number of iterations to run construct/local search cycle
+        returns: best solution after maxitr cycles
+        """
+    # quick check that there are enough nurses to meet demand at a given hour
+    if DATA['nNurses'] < max(DATA['demand']):
+        raise Warning('Not enough nurses!')
 
-def N_x(solution, candidate_set):
-    # Neighbor set will be all combinations of row removals where demand diff vector has NO NEGS
-    neighbor_set = []
-    demand = DATA['demand']
-    totals = [sum(x) for x in zip(*solution)]
-    tvd_diff = [a - b for a, b in zip(totals, demand)]
+    candidate_set = get_candidate_list()
+    xprime = [] # best solution init
 
-    for _, row_i in enumerate(solution):
-        temp_solution = list(solution)
-        row_diff = [a-b for a, b in zip(tvd_diff, row_i)] # calculate new diff with row removal
-        negs_count = get_num_negs(row_diff) # gets negs
+    for _ in range(maxitr):
+        # alpha is greediness defined as initial param
+        current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
+        current_solutionx = local_search(f_xp, current_solutionx)
 
-        if(negs_count) == 0:
-            temp_solution.remove(row_i)
-            neighbor_set.append(temp_solution)
+        # when xprime has len 0 it initializes the first solution
+        if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
+            xprime = current_solutionx
+    return xprime
 
-    return neighbor_set
 
 def main():
     """ Program entry point """
