@@ -210,10 +210,8 @@ def local_search(current_solutionx):
         returns: best solution from neighbors N_x()
     """
     neighbor_set = [a for a in n_x(current_solutionx) if f_x(a) < f_x(current_solutionx)]
+    best_neighbor = current_solutionx
 
-    best_neighbor = []
-    if len(neighbor_set) == 0:
-        best_neighbor = current_solutionx
     while len(neighbor_set) > 0:
         # select a random x from neighbor_set and then make sub list
         best_neighbor = random.choice(neighbor_set)
