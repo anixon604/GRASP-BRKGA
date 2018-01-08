@@ -8,11 +8,8 @@ import math
 import random
 import data
 
-# Run Params ===============================
-MAXITR = 10 # iterations of grasp
-ALPHA = 0.35 # greediness of construction, range [0,1]
-DATA = data.SMALL # <---- CHOOSE DATA SET HERE
-#===========================================
+# GLOBAL VAR
+DATA = {}
 
 # UTILITY FUNCTIONS
 def get_num_negs(list_x):
@@ -154,7 +151,7 @@ def n_x(solution):
     return neighbor_set
 
 # GRASP PROCEDURE, CONSTRUCTOR, LOCAL SEARCH
-def construct_grasp(g_xp, alpha, candidate_set):
+def construct_grasp(alpha, candidate_set):
     """ Constructor function for GRASP
         params:
             gx - scoring function
@@ -183,7 +180,7 @@ def construct_grasp(g_xp, alpha, candidate_set):
 
     for _ in range(DATA['nNurses']):
         # score all elements in the candidate set
-        scored_c_set = [g_xp(sched, demand) for sched in candidate_set]
+        scored_c_set = [g_x(sched, demand) for sched in candidate_set]
         smin = min(scored_c_set)
         smax = max(scored_c_set)
 
@@ -208,11 +205,11 @@ def construct_grasp(g_xp, alpha, candidate_set):
     else:
         raise Warning('No feasible solution')
 
-def local_search(f_xp, current_solutionx):
+def local_search(current_solutionx):
     """ params: f_xp - objective function, current_solutionx - a feasible solution
         returns: best solution from neighbors N_x()
     """
-    neighbor_set = [a for a in n_x(current_solutionx) if f_xp(a) < f_xp(current_solutionx)]
+    neighbor_set = [a for a in n_x(current_solutionx) if f_x(a) < f_x(current_solutionx)]
 
     x_elem = []
     if len(neighbor_set) == 0:
@@ -220,11 +217,11 @@ def local_search(f_xp, current_solutionx):
     while len(neighbor_set) > 0:
         # select a random x from neighbor_set and then make sub list
         x_elem = random.choice(neighbor_set)
-        neighbor_set = [a for a in n_x(x_elem) if f_xp(a) < f_xp(x_elem)]
+        neighbor_set = [a for a in n_x(x_elem) if f_x(a) < f_x(x_elem)]
 
     return x_elem
 
-def grasp_procedure(f_xp, g_xp, maxitr):
+def grasp_procedure(alpha, maxitr):
     """ Procedure function
         params:
             fx - optimization function
@@ -241,21 +238,27 @@ def grasp_procedure(f_xp, g_xp, maxitr):
 
     for _ in range(maxitr):
         # alpha is greediness defined as initial param
-        current_solutionx = construct_grasp(g_xp, ALPHA, candidate_set)
-        current_solutionx = local_search(f_xp, current_solutionx)
+        current_solutionx = construct_grasp(alpha, candidate_set)
+        current_solutionx = local_search(current_solutionx)
 
         # when xprime has len 0 it initializes the first solution
-        if (len(xprime) == 0) or (f_xp(current_solutionx) < f_xp(xprime)):
+        if (len(xprime) == 0) or (f_x(current_solutionx) < f_x(xprime)):
             xprime = current_solutionx
     return xprime
 
 def main():
     """ Program entry point """
+    global DATA
+
+    # RUN PARAMS
+    maxitr = 10          # iterations of grasp
+    alpha = 0.35         # greediness of construction, range [0,1]
+    DATA = data.SMALL    # <---- CHOOSE DATA SET HERE
 
     # execution
     try:
         t_init = time.time()
-        solution = grasp_procedure(f_x, g_x, MAXITR)
+        solution = grasp_procedure(alpha, maxitr)
         t_end = time.time()
         total = t_end-t_init
 
@@ -267,3 +270,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
