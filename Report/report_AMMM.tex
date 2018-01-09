@@ -371,18 +371,17 @@ In our project the following algorithms were implemented:\\
 
 The constuct function builds up a feasible solution (one where all the demand is satisfied by a subset of available nurses with valid schedules) by
 adding one nurse at a time until all the demand is satisfied or the pool of nurses is exhausted.
+A solution is a matrix of dimension numNurses x numHours where each row is a binary vector representing a nurse schedule where 1 is a worked hour and 0 is unworked.
 Many GRASP implementations will update the candidate list after each addition, however, in our problem nurses are independent of each other and
 the schedule of one nurse has no effect on the constraints of the next nurse. We only need to update the demand. The candidate list of possible schedules is preconstructed against the constraints
 and passed in as an argument.\\
 
-In deciding which schedule to assign each nurse that is added to the solution we score how each schedule in the candidate list will
+To decide which schedule to assign each nurse added to the solution we score how each schedule in the candidate list will
 affect the demand vector via our {\bf greedy function g()} described below. After scores are assigned to candidates
-we create a restricted candidate list which creates a sub-list of \"best\" candidates based on the {\bf RCL Equation}: 
+we create a restricted candidate list which creates a sub-list of best candidates based on the {\bf RCL Equation}: 
 $s_{min} + \alpha*(s_{max}-s_{min})$. $\alpha$ is a value [0-1] which defines a percentage of best scored candidates. A value
 of 0 means it's most greedy and will always pick the best, a value of 1 means highest randomness and any candidate might be added to solution
-at that stage. The point of the RCL is to introduce an element of randomness to the constructed solution to get new local search minimums.
- 
-\pagebreak
+at that stage. The point of the RCL is to introduce an element of randomness to the constructed solution to get new local search minimums.\\
 
 \noindent{\tt {\bf Procedure g(schedule, $\vec{D}$ = demand)}}\\
 1  score = 0\\
@@ -395,6 +394,10 @@ at that stage. The point of the RCL is to introduce an element of randomness to 
 8  end for\\
 9  return score\\
 
+Our {\bf GREEDY function g()} uses the exponential function to accumulate a score on how effective the schedule at satisfying demand.
+If the schedule was a perfect match ($\Delta$ = 0) no penalty score would be added. We chose exponential because it accumulates penalties for both failing to staff a demand
+hour and for overstaffing a demand hour, the case when $\Delta$ of a given hour is 1 or -1 respectively. Lastly, we normalized the function because of buffer limitations in runtime.\\
+
 \noindent{\tt {\bf Procedure local\_search(x = feasible\_solution)}}\\
 1  neighbor\_set = $\{y \in N(x) \phantom{a}|\phantom{a} f(y) < f(x)\}$\\
 2  best\_neighbor = x\\
@@ -405,8 +408,16 @@ at that stage. The point of the RCL is to introduce an element of randomness to 
 7  end while\\
 8  return best\_neighbor\\
 
+Local search refines the initial feasible solution but generating a set of nearby solutions defined by the
+neighbor function N() (described below), which improve the objective function f() (described below). From this set the algorithm descends to a local min by choosing a random
+solution and then repeating the process (finding it's neighbor set and comparing their f() values), until we are left with a single element which has
+no better neighbors.\\
+
 \noindent{\tt {\bf Procedure f(solution)}}\\
 1 return number of nurses in solution (count rows in solution)\\
+
+Objective function f() returns the number of nurses used in a solution by returning the number of rows, each of
+which represent one nurse working in the solution.\\
 
 \noindent{\tt {\bf Procedure N(x = solution)}}\\
 1  neighbor\_set = $\emptyset$\\
@@ -423,6 +434,12 @@ at that stage. The point of the RCL is to introduce an element of randomness to 
 12\hspace*{.4cm}end if\\
 13 end for\\
 14 return neighbor\_set\\
+
+The neighbor function N() returns a set of all neighbors to the input solution. 
+It defines a neighbor to be any solution that still satisfies demand after removing a nurse from the original solution.
+To implement this we tracked demand surpluses from the original solution in the $\vec{demand\_\Delta}$ variable and then
+simulated how this overall demand remained satisfied after each possible row removal via $\vec{row\_effect}$. A
+negative value in this vector indicates that there is demand that is unsatisfied.
 
 %%%%%%%%%%% Apendix part.  %%%%%%%%%%%%
 
