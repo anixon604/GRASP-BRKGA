@@ -1,21 +1,9 @@
 /*********************************************
  * OPL 12.7.1.0 Data
- * Author: anthonyn
+ * Author: mathieu.chiavassa, anthony.nixon
  * Creation Date: Jan 9, 2018 at 2:20:55 AM
  *********************************************/
-//// A
-// numNurses = 900;
-// hours =  24;
-// demand = [860 750 710 652 623 687 666 623 811 568 563 561 832 597 567 707 840 625 700 774 615 870 677 549];
-// minHours = 6;
-// maxHours = 18;
-// maxConsec = 7;
-// 
-// // B
-// maxPresence = 24;
-//  
 
- // A
  numNurses = 900;
  hours =  24;
  demand = [482 325 483 510 412 193 414 476 305 234 202 280 431 300 549 426 460 508 448 178 307 345 413 178];
@@ -23,6 +11,5 @@
  maxHours = 18;
  maxConsec = 7;
  
- // B
  maxPresence = 24;
   
