@@ -53,7 +53,7 @@ plt.axis([0, len(evol), 0, max(evol) + 0.5])  # (chrLength+1)*chrLength/2]
 plt.show()
 
 bestIndividual = decoder.infoBestIndividual(bestIndividual)
-print(bestIndividual)
+#print(bestIndividual)
 
 t_end=time.time()
 total_time=t_end-t_init
