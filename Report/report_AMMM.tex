@@ -346,10 +346,84 @@ But the best improvements would be to define a decoding procedure that gives dir
 %%%%%%%%%%%. GRASP section %%%%%%%
 
 \section{The GRASP method}
-The greedy randomized adaptive search procedures method (GRASP) has a constuction phase and a local search phase. Iteration through these phases obtains a good, but not necessarily optimal, solution by creating feasible solutions then refining them during each loop.
+The greedy randomized adaptive search procedures method (GRASP) has a constuction phase and a local search phase. Iteration through these phases obtains a good, but not necessarily optimal, solution by creating feasible solutions then refining them during each iteration.
 In our project the following algorithms were implemented:\\
 
-\textit{\textbf{Procedure} construct(alpha, candidate\_list)}
+\noindent{\tt {\bf Procedure construct($\alpha$, C = candidate\_set)}\\
+1  possible\_solution = $\emptyset$\\
+2  solved = False\\
+3  Initialize demand vector $\vec{D}$\\
+4  for k = 1,2,...,numNurses do\\
+5\hspace*{.4cm} $s_{min} = min\{g(t, \vec{D}) \phantom{a}|\phantom{a} t \in C\}$\\
+6\hspace*{.4cm} $s_{max} = max\{g(t, \vec{D}) \phantom{a}|\phantom{a} t \in C\}$\\
+7\hspace*{.4cm} RCL = $\{s \in C \phantom{a}|\phantom{a} g(s, \vec{D}) \leq s_{min} + \alpha*(s_{max}-s_{min})\}$\\
+8\hspace*{.4cm} select random s from RCL\\
+9\hspace*{.4cm} possible\_solution = possible\_solution $\cup$ {s}\\
+10\hspace*{.2cm} Subtract s from $\vec{D}$\\
+11\hspace*{.2cm} if max($\vec{D}$) is 0 do\\
+12\hspace*{.6cm} solved = True\\
+13\hspace*{.6cm} break\\
+14\hspace*{.2cm} end if\\
+15\hspace*{.0cm} end for\\
+16 if solved is True do\\
+17\hspace*{.4cm} return possible\_solution\\
+18 else infeasible\\
+
+The constuct function builds up a feasible solution (one where all the demand is satisfied by a subset of available nurses with valid schedules) by
+adding one nurse at a time until all the demand is satisfied or the pool of nurses is exhausted.
+Many GRASP implementations will update the candidate list after each addition, however, in our problem nurses are independent of each other and
+the schedule of one nurse has no effect on the constraints of the next nurse. We only need to update the demand. The candidate list of possible schedules is preconstructed against the constraints
+and passed in as an argument.\\
+
+In deciding which schedule to assign each nurse that is added to the solution we score how each schedule in the candidate list will
+affect the demand vector via our {\bf greedy function g()} described below. After scores are assigned to candidates
+we create a restricted candidate list which creates a sub-list of \"best\" candidates based on the {\bf RCL Equation}: 
+$s_{min} + \alpha*(s_{max}-s_{min})$. $\alpha$ is a value [0-1] which defines a percentage of best scored candidates. A value
+of 0 means it's most greedy and will always pick the best, a value of 1 means highest randomness and any candidate might be added to solution
+at that stage. The point of the RCL is to introduce an element of randomness to the constructed solution to get new local search minimums.
+ 
+\pagebreak
+
+\noindent{\tt {\bf Procedure g(schedule, $\vec{D}$ = demand)}}\\
+1  score = 0\\
+2  maxd = max($\vec{D}$)\\
+3  for k = 1,2,...,numNurses do\\
+4\hspace*{.4cm} $\Delta$ = $\vec{D}$[k] - schedule[k]\\
+5\hspace*{.4cm} if $\Delta$ not 0 do\\
+6\hspace*{.6cm} score = score + $\exp^{delta/maxd}$\\
+7\hspace*{.4cm} end if\\
+8  end for\\
+9  return score\\
+
+\noindent{\tt {\bf Procedure local\_search(x = feasible\_solution)}}\\
+1  neighbor\_set = $\{y \in N(x) \phantom{a}|\phantom{a} f(y) < f(x)\}$\\
+2  best\_neighbor = x\\
+3  while neighbor\_set is $\ne \emptyset$ do\\
+4\hspace*{.4cm} select random n from neighbor\_set\\
+5\hspace*{.4cm} best\_neighbor = n\\
+6\hspace*{.4cm} neighbor\_set = $\{y \in N(best\_neighbor) \phantom{a}|\phantom{a} f(y) < f(best\_neighbor)\}$\\
+7  end while\\
+8  return best\_neighbor\\
+
+\noindent{\tt {\bf Procedure f(solution)}}\\
+1 return number of nurses in solution (count rows in solution)\\
+
+\noindent{\tt {\bf Procedure N(x = solution)}}\\
+1  neighbor\_set = $\emptyset$\\
+2  Initialize demand vector $\vec{D}$\\
+3  nurses\_working = $\{(t_1,t_2,...,t_n) \phantom{a}|\phantom{a} \forall j \in \{1,...,nHours\}, t_j = \sum_{i=1}^{numNurses} x_{ij}\}$\\
+4  $\vec{demand\_\Delta}$ = $\vec{nurses\_working}$ - $\vec{D}$\\
+5  for each row in solution do\\
+6\hspace*{.4cm} Initialize neighbor\_sol to solution\\
+7\hspace*{.4cm} $\vec{row\_effect} = \vec{demand\_\Delta} - \vec{row}$\\
+8\hspace*{.4cm} negative\_count = number of negatives in $\vec{row\_effect}$\\
+9\hspace*{.4cm} if negative\_count is 0 do\\
+10\hspace*{.8cm}remove row from neighbor\_sol\\
+11\hspace*{.8cm}add neighbor\_sol to neighbor\_set\\
+12\hspace*{.4cm}end if\\
+13 end for\\
+14 return neighbor\_set\\
+
 %%%%%%%%%%% Apendix part.  %%%%%%%%%%%%
 
 \pagebreak
