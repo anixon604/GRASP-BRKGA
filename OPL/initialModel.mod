@@ -4,7 +4,6 @@
 * Creation Date: 19/12/2017 at 18:20:16
 *********************************************/
 
-// A
 int numNurses = ...;
 int hours = ...;
 range N = 1..numNurses;
@@ -15,10 +14,8 @@ int minHours = ...;
 int maxHours = ...;
 int maxConsec = ...;
 
-// B
 int maxPresence = ...;
 
-// A
 dvar boolean works[n in N][h in H]; 	  // Whether nurse n works at hour h
 dvar boolean worksBefore[n in N][h in H]; // Relative to a given hour, tracks if the nurse works before
 dvar boolean worksAfter[n in N][h in H];  // Relative to a given hour, tracks if the nurse works after
