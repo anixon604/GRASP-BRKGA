@@ -166,19 +166,9 @@ To solve a minimization problem such the nurse scheduling described in section \
 \end{itemize}
 If the problem and the parameters have been chosen correctly, the individual with the best fitness in the last generation is a good candidate for the optimum of our problem.\\
 
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[scale=0.38]{./figBRKGA} 
-\end{center}
-\caption{Schematic representation for transition to generation $k$ to $k+1$. (Reproduced from J.F. Goncalves paper). A percentage of the best fitted individuals, called elite is directly reproduced in the next generation. A percentage of the new generation is composed by crossover between elite and non-elite individuals. Crossover is obtain by randomly exchanging genes of the parents. The third part of the new generation is composed by mutants whose genes are randomly generated. This allows to explore a larger space of solutions, and prevents (theoretically) to be trapped in a local optimum. }
-\label{fig-brkga}
-\end{figure}
-
 The tricky part of the BRKGA algorithms is the decoder procedure and a huge number of research papers deal with this problem.
  If the chromosome is composed of N genes, the decoder must map the hypercube space $[0,1]^N$ to the solution space. A suited fitness has also to be defined o select the best candidate in the solution space. \\
  
-We read many papers to find the best way to define such procedure for our nurse scheduling problem. Nevertheless we do not succeed to apply the proposed ideas due to the constraints we have on the schedules. We then proposed our own decoder technique, which as we will see, works well in some cases but has some weakness we will comment later on.\\
-
 \subsection{Our decoder and fitness procedures}
 The decoder procedure we propose  will map the chromosome  to the daily schedule for all the nurses, represented by the boolean array $works$ of size $numNnurse \times hours$ introduced in section \ref{sec-OPL}. The chromosome length is therefore $numNurse \times hours$. The mapping from floating genes value to boolean ones is simply done by the transform procedure:\\
 
@@ -322,7 +312,7 @@ In this test we try to optimize the schedule of 25 nurses for a 18 hours working
 The result is not so bad since only  2 nurses have an incorrect schedule and for 2 hours the workload is not equal to the demand. The fitness evolution is reported on figure \ref{figBRKGA_TEST3A} a). As observed on figure \ref{figBRKGA_TEST3A} b), increasing the number of generations do not improve the result.\\
 
 We perform a huge number of numerical experiments exploring  the parameters space to try to obtain the optimal solution. Unfortunately, we never obtain this optimal solution!\\
-We  increase the number of mutants, and the probability of crossover, to avoid falling in a local minima but the results were not significantly better. Adding more individuals in the population do not always results in better results, but of course significantly increase the cpu time! \\
+Adding more individuals in the population do not always results in better results, but of course significantly increase the cpu time! \\
 
 Sometimes we obtain a perfect schedule for all the 25 nurses but in that case the workload is far from the demand, and do not improves with the number of generations. We tried to find an definition of the fitness  with different amount of penalization coming from schedule and workload errors, but once again no optimal solution has been found.
 \begin{figure}[htbp]
@@ -340,7 +330,7 @@ a) & b) \cr
 
 \subsection{Conclusion for BRKGA method}
 We found this method very interesting since it is based on very simple concepts to optimize a complex problem. Our version gives most of the time the optimal solution for problems with less than about 350 genes. Nevertheless, we are a little bit disappointed since we do not obtain optimal results for larger problems, despite many efforts...  \\
-Some improvements could be made, adding also a mutation procedure of the chromosomes, as we have seen in many AG papers. It will may be help to go out of the local minima by modifying  randomly the genes of the individuals. \\
+Some improvements could be made, adding also a mutation procedure of the chromosomes, or increasing the number of mutants, and the probability of crossover as we have seen in many AG papers. It will may be help to go out of the local minima by modifying  randomly the genes of the individuals. \\
 But the best improvements would be to define a decoding procedure that gives directly a correct schedule for all the nurses. In that case, only the workload would be optimized in a very smaller space. Unfortunately, we did not found this procedure, but we will be very interesting if it exists!
 
 
@@ -368,7 +358,7 @@ In our project the following algorithms were implemented:\\
 15\hspace*{.0cm} end for\\
 16 if solved is True do\\
 17\hspace*{.4cm} return possible\_solution\\
-18 else infeasible\\
+18 else infeasible\\}
 
 The constuct function builds up a feasible solution (one where all the demand is satisfied by a subset of available nurses with valid schedules) by
 adding one nurse at a time until all the demand is satisfied or the pool of nurses is exhausted.
@@ -384,7 +374,7 @@ $s_{min} + \alpha*(s_{max}-s_{min})$. $\alpha$ is a value [0-1] which defines a 
 of 0 means it's most greedy and will always pick the best, a value of 1 means highest randomness and any candidate might be added to solution
 at that stage. The point of the RCL is to introduce an element of randomness to the constructed solution to get new local search minimums.\\
 
-\noindent{\tt {\bf Procedure g(schedule, $\vec{D}$ = demand)}}\\
+\noindent{\tt {\bf Procedure g(schedule, $\vec{D}$ = demand)}\\
 1  score = 0\\
 2  maxd = max($\vec{D}$)\\
 3  for k = 1,2,...,numNurses do\\
@@ -393,13 +383,13 @@ at that stage. The point of the RCL is to introduce an element of randomness to 
 6\hspace*{.6cm} score = score + $\exp^{delta/maxd}$\\
 7\hspace*{.4cm} end if\\
 8  end for\\
-9  return score\\
+9  return score\\ }
 
 Our {\bf GREEDY function g()} uses the exponential function to accumulate a score on how effective the schedule at satisfying demand.
 If the schedule was a perfect match ($\Delta$ = 0) no penalty score would be added. We chose exponential because it accumulates penalties for both failing to staff a demand
 hour and for overstaffing a demand hour, the case when $\Delta$ of a given hour is 1 or -1 respectively. Lastly, we normalized the function because of buffer limitations in runtime.\\
 
-\noindent{\tt {\bf Procedure local\_search(x = feasible\_solution)}}\\
+\noindent{\tt {\bf Procedure local\_search(x = feasible\_solution)}\\
 1  neighbor\_set = $\{y \in N(x) \phantom{a}|\phantom{a} f(y) < f(x)\}$\\
 2  best\_neighbor = x\\
 3  while neighbor\_set is $\ne \emptyset$ do\\
@@ -407,20 +397,20 @@ hour and for overstaffing a demand hour, the case when $\Delta$ of a given hour 
 5\hspace*{.4cm} best\_neighbor = n\\
 6\hspace*{.4cm} neighbor\_set = $\{y \in N(best\_neighbor) \phantom{a}|\phantom{a} f(y) < f(best\_neighbor)\}$\\
 7  end while\\
-8  return best\_neighbor\\
+8  return best\_neighbor\\}
 
 Local search refines the initial feasible solution but generating a set of nearby solutions defined by the
 neighbor function N() (described below), which improve the objective function f() (described below). From this set the algorithm descends to a local min by choosing a random
 solution and then repeating the process (finding it's neighbor set and comparing their f() values), until we are left with a single element which has
 no better neighbors.\\
 
-\noindent{\tt {\bf Procedure f(solution)}}\\
-1 return number of nurses in solution (count rows in solution)\\
+\noindent{\tt {\bf Procedure f(solution)}\\
+1 return number of nurses in solution (count rows in solution)\\}
 
 Objective function f() returns the number of nurses used in a solution by returning the number of rows, each of
 which represent one nurse working in the solution.\\
 
-\noindent{\tt {\bf Procedure N(x = solution)}}\\
+\noindent{\tt {\bf Procedure N(x = solution)}\\
 1  neighbor\_set = $\emptyset$\\
 2  Initialize demand vector $\vec{D}$\\
 3  nurses\_working = $\{(t_1,t_2,...,t_n) \phantom{a}|\phantom{a} \forall j \in \{1,...,nHours\}, t_j = \sum_{i=1}^{numNurses} x_{ij}\}$\\
@@ -434,7 +424,7 @@ which represent one nurse working in the solution.\\
 11\hspace*{.8cm}add neighbor\_sol to neighbor\_set\\
 12\hspace*{.4cm}end if\\
 13 end for\\
-14 return neighbor\_set\\
+14 return neighbor\_set\\}
 
 The neighbor function N() returns a set of all neighbors to the input solution. 
 It defines a neighbor to be any solution that still satisfies demand after removing a nurse from the original solution.
@@ -450,6 +440,7 @@ negative value in this vector indicates that there is demand that is unsatisfied
 \section{Appendix  : OPL script }
 \label{appenOPL}
 \underline{OPL optimization code :}\\\\
+<<<<<<< HEAD
 
 \tiny{\begin{lstlisting}
 
@@ -515,6 +506,73 @@ subject to {
 			rests[n][h] == (1-works[n][h]) - (1-worksAfter[n][h]) - (1-worksBefore[n][h]); 
 }
 
+=======
+
+\tiny{\begin{lstlisting}
+
+int numNurses = ...;
+int hours = ...;
+range N = 1..numNurses;
+range H = 1..hours;
+
+int demand [h in H]= ...;
+int minHours = ...;
+int maxHours = ...;
+int maxConsec = ...;
+
+int maxPresence = ...;
+
+dvar boolean works[n in N][h in H]; 	  // Whether nurse n works at hour h
+dvar boolean worksBefore[n in N][h in H]; // Relative to a given hour, tracks if the nurse works before
+dvar boolean worksAfter[n in N][h in H];  // Relative to a given hour, tracks if the nurse works after
+dvar boolean rests[n in N][h in H]; 	  // Whether a nurse rests at hour h
+dvar boolean used[n in N];				  // If nurse n is used or not
+
+minimize sum(n in N) used[n]; 			  // Objective is to minimize the number of nurses 
+subject to {
+
+	// Constraint 1
+	// The number of provided nurses must be greater or equal to the demand of each hour
+	forall(h in H)
+		sum(n in N) works[n][h] >= demand[h]; 
+
+	// Constraint 2
+	// Each nurse that is working must work at least minHours.
+	forall(n in N)
+		sum (h in H) works[n][h] >= minHours*used[n];
+
+	// Constraint 3
+	// No nurse that is working can work more than maxHours hours.
+	forall(n in N)
+		sum (h in H) works[n][h] <= maxHours*used[n];
+
+	// Constraint 4
+	// Each nurse should work at most maxConsec consecutive hours - must have a break to work more.
+	// - algorithm uses sliding window comparisons
+	forall(n in N)
+		forall(i in 1..(hours-maxConsec))
+			sum(j in i..(i+maxConsec)) works[n][j] <= maxConsec*used[n];
+
+	// Constraint 5 and 6
+	// No nurse can stay at the hospital for more than maxPresence number of hours
+	// Rests must be no longer than one hour in length
+	forall(n in N)
+		forall (h in H: h <= hours-maxPresence)
+			worksBefore[n][h] + worksAfter[n][h+maxPresence] <= 1;
+	
+	forall(n in N)
+		forall (h in H: h <= hours-1){
+			worksAfter[n][h] >= worksAfter[n][h+1];   // allowed: 11110, rejected: 10101
+			worksBefore[n][h] <= worksBefore[n][h+1]; // allowed: 00111, rejected: 01110
+			rests[n][h] + rests[n][h+1] <= 1;         // allowed: 10100, rejected: 11001
+		}
+
+	forall(n in N)
+		forall (h in H)
+			rests[n][h] == (1-works[n][h]) - (1-worksAfter[n][h]) - (1-worksBefore[n][h]); 
+}
+
+>>>>>>> 45b193d87ceaa244403a6b6265deffdb05626942
 \end{lstlisting}}
 
 \end{appendix}
