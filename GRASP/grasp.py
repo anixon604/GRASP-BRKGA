@@ -249,8 +249,8 @@ def main():
     global DATA
 
     # RUN PARAMS
-    maxitr = 10          # iterations of grasp
-    alpha = 0.35         # greediness of construction, range [0,1]
+    maxitr = 2          # iterations of grasp
+    alpha = 0.1         # greediness of construction, range [0,1]
     DATA = data.SMALL    # <---- CHOOSE DATA SET HERE
 
     # execution

@@ -57,4 +57,4 @@ bestIndividual = decoder.infoBestIndividual(bestIndividual)
 
 t_end=time.time()
 total_time=t_end-t_init
-print(total_time)
+print('total running time =', total_time)

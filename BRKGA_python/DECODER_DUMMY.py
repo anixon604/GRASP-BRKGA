@@ -98,7 +98,7 @@ def infoBestIndividual(bestIndividual):
 
     print('Comp. Workload', workload)
     print('Dema. Workload', data['demand'])
-    print(totalnurses)
+    print('Total number of working nurses=', totalnurses)
     # error=compareworkload(workload)
     return (bestIndividual)
 
